@@ -52,7 +52,7 @@ const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
-  encodeBundleArr, decodeBundleStr, insights,
+  encodeBundleArr, decodeBundleStr, insights, poPlan,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -140,6 +140,14 @@ check('insights: praises strong candidate, flags a loss', () => {
   const bad = t.insights({ ...base, price: 10, cost: 8, fba: 4, inbound: 0.5, other: 0.5 });
   assert.equal(bad[0].level, 'bad');
   assert.deepEqual(t.insights({ ...base, price: 0 }), []); // no price -> no hints
+});
+
+check('poPlan: outlay, profit, ROI, sell-through months', () => {
+  const p = t.poPlan(base, 500); // invest = 7.5+0.6+0.5 = 8.6, net = 12.14, units/mo = 300
+  assert.ok(Math.abs(p.outlay - 4300) < 0.5, 'outlay ' + p.outlay);
+  assert.ok(Math.abs(p.profit - 6070) < 1, 'profit ' + p.profit);
+  assert.ok(Math.abs(p.roi - 141.16) < 0.5, 'roi ' + p.roi);
+  assert.ok(Math.abs(p.months - 1.667) < 0.01, 'months ' + p.months);
 });
 
 console.log(`\n${n} checks passed.`);

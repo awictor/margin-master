@@ -268,6 +268,27 @@
 
 <div class="fullwrap">
   <section class="card">
+    <h2>Purchase order planner</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>If I order</span>
+        <div class="ig" style="width:110px"><span class="pre">#</span><input id="poQty" type="number" step="10" value="500"></div>
+        <span>units at the numbers above:</span>
+      </div>
+      <div class="solveout">
+        <div class="solvestats">
+          <div class="stat"><div id="poOutlay" class="v">—</div><div class="k">Cash outlay</div></div>
+          <div class="stat"><div id="poProfit" class="v">—</div><div class="k">Profit if sold through</div></div>
+          <div class="stat"><div id="poRoi" class="v">—</div><div class="k">Return on order</div></div>
+          <div class="stat"><div id="poMonths" class="v">—</div><div class="k">Sell-through time</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
     <h2>FBA fee estimator <span class="badge">US · standard-size</span></h2>
     <div class="solver">
       <div class="sline">
@@ -429,6 +450,17 @@ function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
 // Annualized cash-on-cash ROI: per-unit ROI earned once per inventory turn (365/days turns per year).
 function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 
+// Purchase-order economics for a given order quantity.
+function poPlan(s,qty){
+  const r=compute(s), invest=r.invest;
+  return {
+    outlay: qty*invest,
+    profit: qty*r.net,
+    roi: invest>0 ? r.net/invest*100 : 0,
+    months: s.units>0 ? qty/s.units : Infinity,
+  };
+}
+
 // Plain-English fee/margin benchmark hints for the current inputs.
 function insights(s){
   const out=[]; const price=s.price; if(!(price>0)) return out;
@@ -493,6 +525,8 @@ function calc(){
 
   const ins=insights(s);
   $("insights").innerHTML=ins.map(i=>`<div class="ins ${i.level}"><span class="dot"></span><span>${i.msg}</span></div>`).join("");
+
+  renderPO(s);
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");
@@ -584,6 +618,22 @@ function drawChart(){
   $("chartNote").textContent="Net profit / unit as sale price sweeps "+money0(lo)+"–"+money0(hi)+". Red line = breakeven, dot = your current price.";
 }
 document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units,#fixed,#cycle").forEach(el=>el.addEventListener("input",calc));
+
+// Purchase-order planner render (uses current inputs + order qty)
+function renderPO(s){
+  s=s||readState(); const qty=num("poQty");
+  try{localStorage.setItem("marginmaster.poqty",qty);}catch(e){}
+  if(qty>0){
+    const p=poPlan(s,qty);
+    $("poOutlay").textContent=money0(p.outlay);
+    const pp=$("poProfit"); pp.textContent=money0(p.profit); pp.className="v "+(p.profit>=0?"pos":"neg");
+    const pr=$("poRoi"); pr.textContent=p.roi.toFixed(0)+"%"; pr.className="v "+(p.roi>=0?"pos":"neg");
+    $("poMonths").textContent = isFinite(p.months) ? p.months.toFixed(1)+" mo" : "—";
+  } else {
+    ["poOutlay","poProfit","poRoi","poMonths"].forEach(id=>{ $(id).textContent="—"; $(id).className="v"; });
+  }
+}
+$("poQty").addEventListener("input",()=>renderPO());
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -1030,6 +1080,7 @@ document.querySelectorAll(".row").forEach(row=>{
 });
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle").value=cy;}catch(e){}
+try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 const _nb=loadBundleFromHash();
 if(_nb) showShareMsg("Imported "+_nb+" shared product"+(_nb===1?"":"s")+" into your compare list below.",true);
