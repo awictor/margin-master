@@ -242,6 +242,7 @@
       <button id="shareBtn" class="btn ghost" title="Copy a link that reopens these exact numbers">🔗 Share</button>
       <button id="saveBtn" class="btn primary">Save</button>
     </div>
+    <input id="pnote" type="text" placeholder="Note for this product (optional)" maxlength="120" style="width:100%;text-align:left;padding-left:12px;margin-top:8px">
     <div id="shareMsg" class="empty" style="display:none"></div>
   </section>
 </div>
@@ -929,10 +930,14 @@ const store=arr=>localStorage.setItem(KEY,JSON.stringify(arr));
 
 function saveProduct(){
   const name=($("pname").value||"").trim() || ("Product "+(load().length+1));
+  const note=($("pnote").value||"").trim();
   const arr=load();
-  arr.push({id:Date.now(),name,state:{...current}});
-  store(arr); $("pname").value=""; render();
+  arr.push({id:Date.now(),name,note,state:{...current}});
+  store(arr); $("pname").value=""; $("pnote").value=""; render();
 }
+function noteEdit(id){ const arr=load(), p=arr.find(x=>x.id===id); if(!p) return;
+  const v=prompt("Note for "+(p.name||"product")+":", p.note||""); if(v===null) return;
+  p.note=v.trim(); store(arr); render(); }
 function delProduct(id){ store(load().filter(p=>p.id!==id)); render(); }
 function dupProduct(id){ const p=load().find(x=>x.id===id); if(!p) return;
   const arr=load(); arr.push({id:Date.now(),name:(p.name||"Product")+" (copy)",state:{...p.state}}); store(arr); render(); }
@@ -991,13 +996,13 @@ function render(){
     const best=r.margin===bestMargin && rows.length>1;
     html+=`<tr class="${best?'best':''}">
       <td>${i+1}</td>
-      <td>${best?'⭐ ':''}${esc(p.name)}</td>
+      <td>${best?'⭐ ':''}${esc(p.name)}${p.note?` <span class="info" title="${esc(p.note)}">📝</span>`:""}</td>
       <td>${money(p.state.price)}</td>
       <td class="${cls(r.net)}">${money(r.net)}</td>
       <td class="${cls(r.margin)}" style="background:${heat(r.margin)}">${r.margin.toFixed(1)}%</td>
       <td class="${cls(r.roi)}">${r.roi.toFixed(0)}%</td>
       <td class="${cls(r.mprofit)}">${money0(r.mprofit)}</td>
-      <td><button class="mini" title="Load into calculator" data-load="${p.id}">↺</button><button class="mini" title="Duplicate" data-dup="${p.id}">⧉</button><button class="mini" title="Delete" data-del="${p.id}">✕</button></td>
+      <td><button class="mini" title="Load into calculator" data-load="${p.id}">↺</button><button class="mini" title="Edit note" data-note="${p.id}">📝</button><button class="mini" title="Duplicate" data-dup="${p.id}">⧉</button><button class="mini" title="Delete" data-del="${p.id}">✕</button></td>
     </tr>`;
   });
   html+='</tbody></table>';
@@ -1010,6 +1015,7 @@ function render(){
     th.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); doSort(); } };
   });
   host.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>loadProduct(+b.dataset.load));
+  host.querySelectorAll("[data-note]").forEach(b=>b.onclick=()=>noteEdit(+b.dataset.note));
   host.querySelectorAll("[data-dup]").forEach(b=>b.onclick=()=>dupProduct(+b.dataset.dup));
   host.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delProduct(+b.dataset.del));
 }
