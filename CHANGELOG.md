@@ -2,6 +2,18 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 1.5.0
+- Competitor price check — match a rival's price and see your net, margin, and a profitable/below-breakeven verdict.
+
+## 1.4.1
+- Discount room — how far price can fall before breakeven (coupon/deal/price-war headroom), as a result tile.
+
+## 1.4.0
+- Portfolio summary bar — total monthly profit, revenue, and capital-in-stock across all saved products.
+
+## 1.3.1
+- Duplicate action on compare rows — clone a product as "<name> (copy)" for quick variants.
+
 ## 1.3.0
 - Quick FBA fee presets — pick a typical item class (small/large standard weight bands, oversize) to drop a fulfillment fee in without dimensions.
 
