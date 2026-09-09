@@ -63,7 +63,12 @@
   .pos{color:var(--good);font-weight:600} .neg{color:var(--bad);font-weight:600}
   .tbltools{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
   .empty{color:var(--muted);font-size:13px;padding:14px 0}
-  .toolbtns{display:flex;gap:8px}
+  .toolbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .solver .sline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+  .solveout{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:16px}
+  .solveout .big{margin:0;color:var(--accent)}
+  .solvestats{display:flex;gap:10px}
+  .solvestats .stat{min-width:92px}
 </style>
 </head>
 <body>
@@ -107,6 +112,38 @@
     <div class="saverow">
       <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
       <button id="saveBtn" class="btn primary">Save</button>
+    </div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
+    <h2>Target-price solver</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>I want a</span>
+        <select id="tgtType" style="width:150px">
+          <option value="margin">Margin</option>
+          <option value="roi">ROI</option>
+          <option value="net">Net profit</option>
+        </select>
+        <span>of</span>
+        <div class="ig" style="width:110px"><span class="pre" id="tgtPre">%</span><input id="tgtVal" type="number" step="0.5" value="30"></div>
+        <span>using the cost inputs above.</span>
+      </div>
+      <div class="solveout">
+        <div>
+          <div class="k">Required sale price</div>
+          <div id="solvePrice" class="big">$0.00</div>
+        </div>
+        <div class="solvestats">
+          <div class="stat"><div id="s_net" class="v">$0</div><div class="k">Net/unit</div></div>
+          <div class="stat"><div id="s_margin" class="v">0%</div><div class="k">Margin</div></div>
+          <div class="stat"><div id="s_roi" class="v">0%</div><div class="k">ROI</div></div>
+        </div>
+        <button id="applyPrice" class="btn primary">Use this price ↑</button>
+      </div>
+      <div id="solveNote" class="empty" style="display:none"></div>
     </div>
   </section>
 </div>
@@ -185,8 +222,46 @@ function calc(){
   $("b_net").textContent=money(r.net);
   $("mprofit").textContent=money0(r.mprofit);
   $("mrev").textContent=money0(r.mrev);
+  solve();
 }
 document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units").forEach(el=>el.addEventListener("input",calc));
+
+/* ---- Target-price solver ---- */
+// Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
+// holding all cost inputs fixed. referral scales with price, other costs don't.
+function solve(){
+  const s=readState();
+  const fees=s.fba+s.inbound, costs=s.cost+s.other, invest=s.cost+s.inbound+s.other;
+  const k=1-s.refpct/100;                 // fraction of price kept after referral fee
+  const type=$("tgtType").value, tv=num("tgtVal");
+  $("tgtPre").textContent = type==="net" ? "$" : "%";
+  let price=NaN, note="";
+  if(type==="margin"){ const m=tv/100;
+    if(k-m<=0) note=`Impossible: referral fee (${s.refpct}%) + target margin (${tv}%) reach 100% of price.`;
+    else price=(fees+costs)/(k-m);
+  } else if(type==="roi"){
+    if(k<=0) note="Impossible: referral fee is 100% or more of price."; else price=(fees+costs+(tv/100)*invest)/k;
+  } else { // net $/unit
+    if(k<=0) note="Impossible: referral fee is 100% or more of price."; else price=(fees+costs+tv)/k;
+  }
+  const noteEl=$("solveNote");
+  if(!isFinite(price)||price<0||note){
+    $("solvePrice").textContent = note? "—" : "$0.00";
+    $("s_net").textContent="—"; $("s_margin").textContent="—"; $("s_roi").textContent="—";
+    noteEl.textContent = note||"Enter a reachable target."; noteEl.style.display = note?"block":"none";
+    $("applyPrice").disabled = true; solvedPrice=null; return;
+  }
+  noteEl.style.display="none"; $("applyPrice").disabled=false; solvedPrice=price;
+  const r=compute({...s,price});
+  $("solvePrice").textContent=money(price);
+  $("s_net").textContent=money(r.net);
+  $("s_margin").textContent=r.margin.toFixed(1)+"%";
+  $("s_roi").textContent=r.roi.toFixed(0)+"%";
+}
+let solvedPrice=null;
+$("tgtType").addEventListener("change",solve);
+$("tgtVal").addEventListener("input",solve);
+$("applyPrice").onclick=()=>{ if(solvedPrice!=null){ $("price").value=solvedPrice.toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
 
 /* ---- Saved products (localStorage) ---- */
 const KEY="marginmaster.products.v1";

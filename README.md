@@ -17,6 +17,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ Cost breakdown waterfall
 - ✅ **Save & compare products** — side-by-side margin table, best-margin ⭐ highlighting, one-click load, CSV export (localStorage, stays private)
 - ✅ **Bulk CSV import + ranking** — drop a supplier/research CSV, auto-map columns, rank by any metric with sortable headers
+- ✅ **Target-price solver** — solve the exact sale price to hit a target margin %, ROI %, or net $/unit, then one-click apply it
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design
 
 ## Run
@@ -33,7 +34,7 @@ Open `index.html` in any browser. That's it. Or host it free on GitHub Pages / N
 
 - [x] Save & compare multiple products (localStorage) — CSV export included
 - [x] Bulk CSV import + best-margin ranking — flexible header mapping, sortable columns
-- [ ] Repricing / target-margin solver
+- [x] Repricing / target-margin solver — margin %, ROI %, or net $/unit
 - [ ] Size-tier → FBA fee auto-estimate
 - [ ] Shareable read-only result links
 - [ ] PDF export for sourcing decisions
