@@ -107,6 +107,10 @@
     border-radius:12px;color:var(--ink);font-size:13px;line-height:1.45}
   .tipx{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;flex:none;padding:2px 6px}
   .tipx:hover{color:var(--accent-d)}
+  .insights{margin-top:16px;display:flex;flex-direction:column;gap:7px}
+  .insights .ins{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.45}
+  .insights .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:5px}
+  .ins.good .dot{background:var(--good)} .ins.warn .dot{background:var(--accent)} .ins.bad .dot{background:var(--bad)}
   /* print sourcing sheet */
   #printsheet{display:none}
   @media print{
@@ -203,6 +207,7 @@
       <div class="stat"><div id="annRoi" class="v">—</div><div class="k">Annualized ROI</div></div>
       <div class="stat"><div id="profitDay" class="v">—</div><div class="k">Profit / day</div></div>
     </div>
+    <div id="insights" class="insights"></div>
     <div class="saverow">
       <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
       <button id="printBtn" class="btn ghost" title="Print or save a one-page sourcing sheet as PDF">🖨 PDF</button>
@@ -424,6 +429,22 @@ function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
 // Annualized cash-on-cash ROI: per-unit ROI earned once per inventory turn (365/days turns per year).
 function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 
+// Plain-English fee/margin benchmark hints for the current inputs.
+function insights(s){
+  const out=[]; const price=s.price; if(!(price>0)) return out;
+  const r=compute(s);
+  if(r.net<0) out.push({level:"bad",msg:"Unprofitable at this price — raise price or cut costs before sourcing."});
+  else if(r.margin>=30 && r.roi>=100) out.push({level:"good",msg:`Strong candidate — ${r.margin.toFixed(0)}% margin, ${r.roi.toFixed(0)}% ROI.`});
+  else if(r.margin<15) out.push({level:"warn",msg:`Thin margin (${r.margin.toFixed(1)}%) — little cushion for PPC, returns, or fee changes.`});
+  const feeShare=(r.referral+r.fees)/price*100;
+  if(feeShare>45) out.push({level:"warn",msg:`Amazon keeps ~${feeShare.toFixed(0)}% of your price in referral + FBA fees.`});
+  if(r.fees/price*100>30) out.push({level:"warn",msg:`Fulfillment + inbound is ${(r.fees/price*100).toFixed(0)}% of price — steep for a low ticket; a higher price or multipack helps.`});
+  if(price*s.refpct/100 < MIN_REF-1e-9) out.push({level:"warn",msg:`Referral fee hit the ${money(MIN_REF)} per-item minimum (common at low prices).`});
+  if(r.costs/price*100>50) out.push({level:"warn",msg:`Product + other cost is ${(r.costs/price*100).toFixed(0)}% of price — tight sourcing margin.`});
+  if(r.net>=0 && r.acosBE>0 && r.acosBE<12) out.push({level:"warn",msg:`Only ${r.acosBE.toFixed(0)}% breakeven ACOS — advertising profitably will be hard.`});
+  return out.slice(0,5);
+}
+
 const FIELDS=["price","cost","refpct","fba","inbound","other","units"];
 function readState(){ const s={}; FIELDS.forEach(f=>s[f]=num(f)); return s; }
 
@@ -469,6 +490,9 @@ function calc(){
   $("mrev").textContent=money0(r.mrev);
   $("maxAd").textContent=money(r.maxAd);
   $("acosBE").textContent=r.acosBE.toFixed(1)+"%";
+
+  const ins=insights(s);
+  $("insights").innerHTML=ins.map(i=>`<div class="ins ${i.level}"><span class="dot"></span><span>${i.msg}</span></div>`).join("");
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");

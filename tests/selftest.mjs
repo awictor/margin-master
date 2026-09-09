@@ -52,7 +52,7 @@ const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
-  encodeBundleArr, decodeBundleStr,
+  encodeBundleArr, decodeBundleStr, insights,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -132,6 +132,14 @@ check('bundle codec: round-trips a compare list, rejects garbage', () => {
   assert.equal(back[1].state.units, 100);
   assert.equal(back[0].name, 'A - one'); // pipe sanitized
   assert.equal(t.decodeBundleStr('###nope'), null);
+});
+
+check('insights: praises strong candidate, flags a loss', () => {
+  const good = t.insights(base);
+  assert.equal(good[0].level, 'good');
+  const bad = t.insights({ ...base, price: 10, cost: 8, fba: 4, inbound: 0.5, other: 0.5 });
+  assert.equal(bad[0].level, 'bad');
+  assert.deepEqual(t.insights({ ...base, price: 0 }), []); // no price -> no hints
 });
 
 console.log(`\n${n} checks passed.`);
