@@ -53,7 +53,7 @@ const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
-  encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan,
+  encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -165,6 +165,17 @@ check('goalPlan: units & sales to hit a monthly profit target', () => {
   assert.ok(Math.abs(g.revenue - 412 * 29.99) < 0.5);
   const loss = t.goalPlan({ ...base, price: 10, cost: 8, fba: 4, inbound: 0.5, other: 0.5 }, 5000);
   assert.equal(loss.units, Infinity); // unprofitable -> unreachable
+});
+
+check('portfolioTotals: sums monthly profit/revenue/capital', () => {
+  const arr = [
+    { name: 'A', state: base },                         // net 12.14 × 300 = 3642, cap 8.6×300=2580
+    { name: 'B', state: { ...base, units: 100 } },      // net 12.14 × 100 = 1214, cap 8.6×100=860
+  ];
+  const tt = t.portfolioTotals(arr);
+  assert.equal(tt.count, 2);
+  assert.ok(Math.abs(tt.profit - (3642 + 1214)) < 2, 'profit ' + tt.profit);
+  assert.ok(Math.abs(tt.capital - (2580 + 860)) < 1, 'capital ' + tt.capital);
 });
 
 console.log(`\n${n} checks passed.`);

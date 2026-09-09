@@ -118,6 +118,8 @@
   .insights .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:5px}
   .ins.good .dot{background:var(--good)} .ins.warn .dot{background:var(--accent)} .ins.bad .dot{background:var(--bad)}
   .info{cursor:help;margin-left:4px;color:var(--muted);font-size:11px;vertical-align:super;line-height:1}
+  .portfolio{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .portfolio .stat{flex:1;min-width:120px}
   /* print sourcing sheet */
   #printsheet{display:none}
   @media print{
@@ -376,6 +378,7 @@
         <input id="csvfile" type="file" accept=".csv,text/csv" hidden>
       </div>
     </div>
+    <div id="portfolio" class="portfolio" style="display:none"></div>
     <div id="tblhost">
       <div class="empty">No saved products yet. Enter numbers above, name it, and hit <b>Save</b> to compare margins side by side. Best margin is highlighted.</div>
     </div>
@@ -832,6 +835,13 @@ function saveProduct(){
 function delProduct(id){ store(load().filter(p=>p.id!==id)); render(); }
 function dupProduct(id){ const p=load().find(x=>x.id===id); if(!p) return;
   const arr=load(); arr.push({id:Date.now(),name:(p.name||"Product")+" (copy)",state:{...p.state}}); store(arr); render(); }
+
+// Aggregate monthly economics across a saved-product list (uses current market/VAT).
+function portfolioTotals(arr){
+  let profit=0,rev=0,capital=0;
+  arr.forEach(p=>{ const r=compute(p.state); profit+=r.mprofit; rev+=r.mrev; capital+=r.invest*(p.state.units||0); });
+  return {count:arr.length,profit,rev,capital};
+}
 function loadProduct(id){
   const p=load().find(x=>x.id===id); if(!p) return;
   FIELDS.forEach(f=>$(f).value=p.state[f]); calc();
@@ -855,6 +865,15 @@ function heat(m){ const c=Math.max(0,Math.min(35,m))/35; const hue=c*130; return
 function render(){
   const arr=load(); $("count").textContent=arr.length;
   const host=$("tblhost");
+  const pf=$("portfolio");
+  if(arr.length){
+    const tt=portfolioTotals(arr); pf.style.display="flex";
+    pf.innerHTML=
+      `<div class="stat"><div class="v">${tt.count}</div><div class="k">Products</div></div>`+
+      `<div class="stat"><div class="v ${tt.profit>=0?'pos':'neg'}">${money0(tt.profit)}</div><div class="k">Total monthly profit</div></div>`+
+      `<div class="stat"><div class="v">${money0(tt.rev)}</div><div class="k">Total monthly revenue</div></div>`+
+      `<div class="stat"><div class="v">${money0(tt.capital)}</div><div class="k">Capital in stock</div></div>`;
+  } else { pf.style.display="none"; pf.innerHTML=""; }
   if(!arr.length){ host.innerHTML='<div class="empty">No saved products yet. Save products above or <b>Import CSV</b> to rank them by margin. Best margin is highlighted.</div>'; return; }
   const rows=arr.map(p=>({p,r:compute(p.state)}));
   const bestMargin=Math.max(...rows.map(x=>x.r.margin));
