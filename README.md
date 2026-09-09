@@ -31,6 +31,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Sensitivity matrix** — net profit/unit across sale price × product cost each ±10/20%, color-coded, so you see how fragile a margin is to a price drop or cost bump
 - ✅ **VAT-aware (UK/EU)** — treat the sale price as VAT-inclusive; VAT is stripped from revenue before profit, referral still charged on gross, margin shown on real ex-VAT revenue
 - ✅ **Share-ready** — Open Graph / Twitter cards, inline SVG favicon, theme-color, and SEO metadata for a clean link preview
+- ✅ **Accessible** — screen-reader labels on every control, live-announced profit result, and keyboard-operable sortable columns
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design
 
 ## Run

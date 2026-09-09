@@ -157,7 +157,7 @@
 
   <section class="card result">
     <h2>Net profit / unit</h2>
-    <div id="profit" class="big">$0.00</div>
+    <div id="profit" class="big" role="status" aria-live="polite" aria-atomic="true" aria-label="Net profit per unit">$0.00</div>
     <div class="grid3">
       <div class="stat"><div id="margin" class="v">0%</div><div class="k">Margin</div></div>
       <div class="stat"><div id="roi" class="v">0%</div><div class="k">ROI</div></div>
@@ -665,7 +665,7 @@ function render(){
   const arrow=k=> sort.key===k ? (sort.dir<0?" ▼":" ▲") : "";
   const cls=v=>v>=0?"pos":"neg";
   let html='<table><thead><tr><th>#</th>';
-  COLS.forEach(c=>{ html+=`<th data-sort="${c.key}" style="cursor:pointer">${c.label}${arrow(c.key)}</th>`; });
+  COLS.forEach(c=>{ html+=`<th data-sort="${c.key}" role="button" tabindex="0" title="Sort by ${c.label}" aria-label="Sort by ${c.label}" style="cursor:pointer">${c.label}${arrow(c.key)}</th>`; });
   html+='<th></th></tr></thead><tbody>';
   rows.forEach(({p,r},i)=>{
     const best=r.margin===bestMargin && rows.length>1;
@@ -682,10 +682,12 @@ function render(){
   });
   html+='</tbody></table>';
   host.innerHTML=html;
-  host.querySelectorAll("[data-sort]").forEach(th=>th.onclick=()=>{
-    const k=th.dataset.sort;
-    if(sort.key===k) sort.dir*=-1; else sort={key:k,dir:k==="name"?1:-1};
-    render();
+  host.querySelectorAll("[data-sort]").forEach(th=>{
+    const doSort=()=>{ const k=th.dataset.sort;
+      if(sort.key===k) sort.dir*=-1; else sort={key:k,dir:k==="name"?1:-1};
+      render(); };
+    th.onclick=doSort;
+    th.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); doSort(); } };
   });
   host.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>loadProduct(+b.dataset.load));
   host.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delProduct(+b.dataset.del));
@@ -861,6 +863,14 @@ $("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
 
 try{const mk=localStorage.getItem(MKT_KEY); if(mk&&MARKETS[mk]) marketSel.value=mk;}catch(e){}
 applyMarket();
+// a11y: mirror each row's visible label onto its control (labels aren't for/id-linked)
+document.querySelectorAll(".row").forEach(row=>{
+  const lab=row.querySelector("label"), ctrl=row.querySelector("input,select");
+  if(lab&&ctrl&&!ctrl.getAttribute("aria-label")){
+    const c=lab.cloneNode(true); c.querySelectorAll(".hint").forEach(h=>h.remove());
+    ctrl.setAttribute("aria-label", c.textContent.trim());
+  }
+});
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 calc(); render();
