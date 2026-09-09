@@ -15,6 +15,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ Live **net profit / unit, margin %, ROI %, breakeven price**
 - ✅ Monthly profit + revenue projection
 - ✅ Cost breakdown waterfall
+- ✅ **Save & compare products** — side-by-side margin table, best-margin ⭐ highlighting, one-click load, CSV export (localStorage, stays private)
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design
 
 ## Run
@@ -29,7 +30,7 @@ Open `index.html` in any browser. That's it. Or host it free on GitHub Pages / N
 
 ## Roadmap
 
-- [ ] Save & compare multiple products (localStorage)
+- [x] Save & compare multiple products (localStorage) — CSV export included
 - [ ] Bulk CSV import + best-margin ranking
 - [ ] Repricing / target-margin solver
 - [ ] Size-tier → FBA fee auto-estimate

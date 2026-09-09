@@ -46,6 +46,24 @@
   footer a{color:var(--accent-d);text-decoration:none}
   .badge{display:inline-block;background:rgba(255,97,0,.12);color:var(--accent-d);
     font-size:11px;padding:3px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+  .btn{border:0;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff} .btn.primary:hover{background:var(--accent-d)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .saverow{display:flex;gap:10px;margin-top:18px}
+  .saverow input{flex:1;text-align:left;padding-left:12px}
+  .fullwrap{max-width:960px;margin:0 auto;padding:0 20px 20px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);cursor:default}
+  tbody tr:hover{background:var(--bg)}
+  tr.best{background:rgba(15,157,88,.08)}
+  td .mini{border:0;background:transparent;cursor:pointer;font-size:13px;padding:2px 6px;color:var(--muted)}
+  td .mini:hover{color:var(--accent-d)}
+  .pos{color:var(--good);font-weight:600} .neg{color:var(--bad);font-weight:600}
+  .tbltools{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .empty{color:var(--muted);font-size:13px;padding:14px 0}
+  .toolbtns{display:flex;gap:8px}
 </style>
 </head>
 <body>
@@ -86,6 +104,25 @@
       <div class="stat"><div id="mprofit" class="v">$0</div><div class="k">Monthly profit</div></div>
       <div class="stat"><div id="mrev" class="v">$0</div><div class="k">Monthly revenue</div></div>
     </div>
+    <div class="saverow">
+      <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
+      <button id="saveBtn" class="btn primary">Save</button>
+    </div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
+    <div class="tbltools">
+      <h2 style="margin:0">Saved products <span id="count" class="badge">0</span></h2>
+      <div class="toolbtns">
+        <button id="exportBtn" class="btn ghost">Export CSV</button>
+        <button id="clearBtn" class="btn ghost">Clear all</button>
+      </div>
+    </div>
+    <div id="tblhost">
+      <div class="empty">No saved products yet. Enter numbers above, name it, and hit <b>Save</b> to compare margins side by side. Best margin is highlighted.</div>
+    </div>
   </section>
 </div>
 
@@ -115,35 +152,104 @@ catSel.addEventListener("change",()=>{ $("refpct").value = catSel.value; calc();
 
 function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
 
-function calc(){
-  const price=num("price"), cost=num("cost"), refpct=num("refpct"),
-        fba=num("fba"), inbound=num("inbound"), other=num("other"), units=num("units");
-  const referral = price * refpct/100;
-  const fees = fba + inbound;
-  const costs = cost + other;
-  const net = price - referral - fees - costs;
-  const invest = cost + inbound + other; // cash out per unit
-  const margin = price>0 ? net/price*100 : 0;
-  const roi = invest>0 ? net/invest*100 : 0;
-  // breakeven sale price: price where net=0 given refpct
-  const be = (fees + costs) / (1 - refpct/100);
+const FIELDS=["price","cost","refpct","fba","inbound","other","units"];
+function readState(){ const s={}; FIELDS.forEach(f=>s[f]=num(f)); return s; }
 
-  const p=$("profit");
-  p.textContent = money(net);
-  p.className = "big " + (net>=0?"good":"bad");
-  $("margin").textContent = margin.toFixed(1)+"%";
-  $("roi").textContent = roi.toFixed(0)+"%";
-  $("be").textContent = money(be);
-  $("b_rev").textContent = money(price);
-  $("b_ref").textContent = "-"+money(referral);
-  $("b_fba").textContent = "-"+money(fees);
-  $("b_cost").textContent = "-"+money(costs);
-  $("b_net").textContent = money(net);
-  $("mprofit").textContent = money0(net*units);
-  $("mrev").textContent = money0(price*units);
+// Pure profit model — reused by the calculator and the saved-products table.
+function compute(s){
+  const referral=s.price*s.refpct/100, fees=s.fba+s.inbound, costs=s.cost+s.other;
+  const net=s.price-referral-fees-costs, invest=s.cost+s.inbound+s.other;
+  return {
+    referral, fees, costs, net, invest,
+    margin: s.price>0 ? net/s.price*100 : 0,
+    roi: invest>0 ? net/invest*100 : 0,
+    be: (1-s.refpct/100)!==0 ? (fees+costs)/(1-s.refpct/100) : 0,
+    mprofit: net*s.units, mrev: s.price*s.units
+  };
 }
-document.querySelectorAll("input").forEach(el=>el.addEventListener("input",calc));
-calc();
+
+let current=null;
+function calc(){
+  const s=readState(), r=compute(s); current=s;
+  const p=$("profit");
+  p.textContent=money(r.net); p.className="big "+(r.net>=0?"good":"bad");
+  $("margin").textContent=r.margin.toFixed(1)+"%";
+  $("roi").textContent=r.roi.toFixed(0)+"%";
+  $("be").textContent=money(r.be);
+  $("b_rev").textContent=money(s.price);
+  $("b_ref").textContent="-"+money(r.referral);
+  $("b_fba").textContent="-"+money(r.fees);
+  $("b_cost").textContent="-"+money(r.costs);
+  $("b_net").textContent=money(r.net);
+  $("mprofit").textContent=money0(r.mprofit);
+  $("mrev").textContent=money0(r.mrev);
+}
+document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units").forEach(el=>el.addEventListener("input",calc));
+
+/* ---- Saved products (localStorage) ---- */
+const KEY="marginmaster.products.v1";
+const load=()=>{ try{return JSON.parse(localStorage.getItem(KEY))||[]}catch{return[]} };
+const store=arr=>localStorage.setItem(KEY,JSON.stringify(arr));
+
+function saveProduct(){
+  const name=($("pname").value||"").trim() || ("Product "+(load().length+1));
+  const arr=load();
+  arr.push({id:Date.now(),name,state:{...current}});
+  store(arr); $("pname").value=""; render();
+}
+function delProduct(id){ store(load().filter(p=>p.id!==id)); render(); }
+function loadProduct(id){
+  const p=load().find(x=>x.id===id); if(!p) return;
+  FIELDS.forEach(f=>$(f).value=p.state[f]); calc();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function render(){
+  const arr=load(); $("count").textContent=arr.length;
+  const host=$("tblhost");
+  if(!arr.length){ host.innerHTML='<div class="empty">No saved products yet. Enter numbers above, name it, and hit <b>Save</b> to compare margins side by side. Best margin is highlighted.</div>'; return; }
+  const rows=arr.map(p=>({p,r:compute(p.state)}));
+  const bestMargin=Math.max(...rows.map(x=>x.r.margin));
+  let html='<table><thead><tr><th>Product</th><th>Price</th><th>Net/unit</th><th>Margin</th><th>ROI</th><th>Mo. profit</th><th></th></tr></thead><tbody>';
+  rows.forEach(({p,r})=>{
+    const best=r.margin===bestMargin && rows.length>1;
+    const cls=v=>v>=0?"pos":"neg";
+    html+=`<tr class="${best?'best':''}">
+      <td>${best?'⭐ ':''}${esc(p.name)}</td>
+      <td>${money(p.state.price)}</td>
+      <td class="${cls(r.net)}">${money(r.net)}</td>
+      <td class="${cls(r.margin)}">${r.margin.toFixed(1)}%</td>
+      <td class="${cls(r.roi)}">${r.roi.toFixed(0)}%</td>
+      <td class="${cls(r.mprofit)}">${money0(r.mprofit)}</td>
+      <td><button class="mini" title="Load into calculator" data-load="${p.id}">↺</button><button class="mini" title="Delete" data-del="${p.id}">✕</button></td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  host.innerHTML=html;
+  host.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>loadProduct(+b.dataset.load));
+  host.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delProduct(+b.dataset.del));
+}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function exportCSV(){
+  const arr=load(); if(!arr.length) return;
+  const head=["Product","Price","Cost","Referral%","FBA","Inbound","Other","Units","Net/unit","Margin%","ROI%","MonthlyProfit"];
+  const lines=[head.join(",")];
+  arr.forEach(p=>{ const s=p.state,r=compute(s);
+    lines.push(['"'+p.name.replace(/"/g,'""')+'"',s.price,s.cost,s.refpct,s.fba,s.inbound,s.other,s.units,
+      r.net.toFixed(2),r.margin.toFixed(1),r.roi.toFixed(0),r.mprofit.toFixed(2)].join(","));
+  });
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="marginmaster-products.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+$("saveBtn").onclick=saveProduct;
+$("pname").addEventListener("keydown",e=>{ if(e.key==="Enter") saveProduct(); });
+$("clearBtn").onclick=()=>{ if(confirm("Delete all saved products?")){ store([]); render(); } };
+$("exportBtn").onclick=exportCSV;
+
+calc(); render();
 </script>
 </body>
 </html>
