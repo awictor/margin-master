@@ -830,6 +830,8 @@ function saveProduct(){
   store(arr); $("pname").value=""; render();
 }
 function delProduct(id){ store(load().filter(p=>p.id!==id)); render(); }
+function dupProduct(id){ const p=load().find(x=>x.id===id); if(!p) return;
+  const arr=load(); arr.push({id:Date.now(),name:(p.name||"Product")+" (copy)",state:{...p.state}}); store(arr); render(); }
 function loadProduct(id){
   const p=load().find(x=>x.id===id); if(!p) return;
   FIELDS.forEach(f=>$(f).value=p.state[f]); calc();
@@ -875,7 +877,7 @@ function render(){
       <td class="${cls(r.margin)}" style="background:${heat(r.margin)}">${r.margin.toFixed(1)}%</td>
       <td class="${cls(r.roi)}">${r.roi.toFixed(0)}%</td>
       <td class="${cls(r.mprofit)}">${money0(r.mprofit)}</td>
-      <td><button class="mini" title="Load into calculator" data-load="${p.id}">↺</button><button class="mini" title="Delete" data-del="${p.id}">✕</button></td>
+      <td><button class="mini" title="Load into calculator" data-load="${p.id}">↺</button><button class="mini" title="Duplicate" data-dup="${p.id}">⧉</button><button class="mini" title="Delete" data-del="${p.id}">✕</button></td>
     </tr>`;
   });
   html+='</tbody></table>';
@@ -888,6 +890,7 @@ function render(){
     th.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); doSort(); } };
   });
   host.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>loadProduct(+b.dataset.load));
+  host.querySelectorAll("[data-dup]").forEach(b=>b.onclick=()=>dupProduct(+b.dataset.dup));
   host.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delProduct(+b.dataset.del));
 }
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
