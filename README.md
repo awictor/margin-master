@@ -26,6 +26,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Storage-fee estimator** — unit volume (ft³) from your dimensions × standard and Oct–Dec peak rates, one-click add to costs
 - ✅ **PPC / ACOS breakeven** — max ad spend per unit and breakeven ACOS % before the sale loses money (shown in results + PDF)
 - ✅ **Accurate referral fees** — per-item minimum floor ($0.30 US / £0.25 UK etc.) and tiered US apparel presets (5% ≤$15, 10%, 17%)
+- ✅ **Profit-vs-price chart** — inline SVG curve of net profit as the price sweeps, with breakeven and current-price markers (redraws live, themed)
 - ✅ **VAT-aware (UK/EU)** — treat the sale price as VAT-inclusive; VAT is stripped from revenue before profit, referral still charged on gross, margin shown on real ex-VAT revenue
 - ✅ **Share-ready** — Open Graph / Twitter cards, inline SVG favicon, theme-color, and SEO metadata for a clean link preview
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design

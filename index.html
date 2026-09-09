@@ -185,6 +185,14 @@
 
 <div class="fullwrap">
   <section class="card">
+    <h2>Profit vs. price</h2>
+    <svg id="chart" viewBox="0 0 640 240" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Net profit per unit as the sale price varies"></svg>
+    <div id="chartNote" class="empty" style="padding:2px 0 0"></div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
     <h2>Target-price solver</h2>
     <div class="solver">
       <div class="sline">
@@ -414,6 +422,46 @@ function calc(){
   $("maxAd").textContent=money(r.maxAd);
   $("acosBE").textContent=r.acosBE.toFixed(1)+"%";
   solve();
+  drawChart();
+}
+
+// Inline-SVG net-profit-vs-price curve with breakeven + current-price markers.
+function drawChart(){
+  const svg=$("chart"); if(!svg) return;
+  const s=readState(), r0=compute(s), center=s.price;
+  const be=r0.be;
+  if(!(center>0)){ svg.innerHTML=""; $("chartNote").textContent="Enter a sale price to see the profit curve."; return; }
+  const anchorLo=Math.min(center, be>0?be:center), anchorHi=Math.max(center, be>0?be:center);
+  let lo=Math.max(0.01, anchorLo*0.6), hi=anchorHi*1.4;
+  if(!isFinite(hi)||hi<=lo) hi=lo*2+1;
+  const N=64, xs=[], nets=[];
+  for(let i=0;i<N;i++){ const p=lo+(hi-lo)*i/(N-1); xs.push(p); nets.push(compute({...s,price:p}).net); }
+  let nMin=Math.min(0,...nets), nMax=Math.max(0,...nets); if(nMax===nMin) nMax=nMin+1;
+  const W=640,H=240,pL=52,pR=14,pT=14,pB=28, pw=W-pL-pR, ph=H-pT-pB;
+  const X=p=>pL+(p-lo)/(hi-lo)*pw, Y=n=>pT+(nMax-n)/(nMax-nMin)*ph;
+  const pts=xs.map((p,i)=>X(p).toFixed(1)+","+Y(nets[i]).toFixed(1)).join(" ");
+  const y0=Y(0);
+  // area under curve down to zero line, split visually by the accent line
+  const g=[];
+  g.push(`<rect x="${pL}" y="${pT}" width="${pw}" height="${ph}" fill="none" stroke="var(--line)"/>`);
+  g.push(`<line x1="${pL}" y1="${y0.toFixed(1)}" x2="${W-pR}" y2="${y0.toFixed(1)}" stroke="var(--muted)" stroke-dasharray="4 3"/>`);
+  g.push(`<text x="${pL-6}" y="${y0.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="var(--muted)">0</text>`);
+  g.push(`<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`);
+  // breakeven marker (only if within range and finite)
+  if(be>lo&&be<hi){ g.push(`<line x1="${X(be).toFixed(1)}" y1="${pT}" x2="${X(be).toFixed(1)}" y2="${H-pB}" stroke="var(--bad)" stroke-dasharray="3 3" opacity=".7"/>`);
+    g.push(`<text x="${X(be).toFixed(1)}" y="${pT+10}" text-anchor="middle" font-size="10" fill="var(--bad)">BE ${money(be)}</text>`); }
+  // current price marker + dot
+  g.push(`<line x1="${X(center).toFixed(1)}" y1="${pT}" x2="${X(center).toFixed(1)}" y2="${H-pB}" stroke="var(--ink)" opacity=".25"/>`);
+  g.push(`<circle cx="${X(center).toFixed(1)}" cy="${Y(r0.net).toFixed(1)}" r="4.5" fill="var(--accent)" stroke="#fff" stroke-width="1.5"/>`);
+  g.push(`<text x="${X(center).toFixed(1)}" y="${(Y(r0.net)-9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${money(r0.net)}</text>`);
+  // axis labels
+  g.push(`<text x="${pL}" y="${H-8}" text-anchor="start" font-size="10" fill="var(--muted)">${money0(lo)}</text>`);
+  g.push(`<text x="${X(center).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--ink)">price ${money0(center)}</text>`);
+  g.push(`<text x="${W-pR}" y="${H-8}" text-anchor="end" font-size="10" fill="var(--muted)">${money0(hi)}</text>`);
+  g.push(`<text x="${pL-6}" y="${(pT+8).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)">${money0(nMax)}</text>`);
+  g.push(`<text x="${pL-6}" y="${(H-pB).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)">${money0(nMin)}</text>`);
+  svg.innerHTML=g.join("");
+  $("chartNote").textContent="Net profit / unit as sale price sweeps "+money0(lo)+"–"+money0(hi)+". Red line = breakeven, dot = your current price.";
 }
 document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units").forEach(el=>el.addEventListener("input",calc));
 
