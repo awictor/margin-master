@@ -22,6 +22,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Shareable links** — copy a link that reopens the exact numbers (state encoded in the URL hash, nothing sent to a server)
 - ✅ **PDF sourcing sheet** — one-click clean, printable one-pager with a sourcing verdict (print → Save as PDF)
 - ✅ **Dark mode** — toggle that persists and respects your system preference (no flash on load)
+- ✅ **Multi-marketplace** — US / CA / UK / EU fee sets with the right currency symbol and per-region category referral presets (remembers your choice)
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design
 
 ## Run

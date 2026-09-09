@@ -123,13 +123,14 @@
 <div class="wrap">
   <section class="card">
     <h2>Your numbers</h2>
-    <div class="row"><label>Sale price</label><div class="ig"><span class="pre">$</span><input id="price" type="number" step="0.01" value="29.99"></div></div>
-    <div class="row"><label>Product cost (landed / unit)<span class="hint">what you pay incl. inbound</span></label><div class="ig"><span class="pre">$</span><input id="cost" type="number" step="0.01" value="7.50"></div></div>
+    <div class="row"><label>Marketplace<span class="hint">sets currency + referral presets</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="market"></select></div></div>
+    <div class="row"><label>Sale price</label><div class="ig"><span class="pre cur">$</span><input id="price" type="number" step="0.01" value="29.99"></div></div>
+    <div class="row"><label>Product cost (landed / unit)<span class="hint">what you pay incl. inbound</span></label><div class="ig"><span class="pre cur">$</span><input id="cost" type="number" step="0.01" value="7.50"></div></div>
     <div class="row"><label>Category<span class="hint">sets referral fee %</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="cat"></select></div></div>
     <div class="row"><label>Referral fee %<span class="hint">auto from category, editable</span></label><div class="ig"><span class="pre">%</span><input id="refpct" type="number" step="0.1" value="15"></div></div>
-    <div class="row"><label>FBA fulfillment fee / unit</label><div class="ig"><span class="pre">$</span><input id="fba" type="number" step="0.01" value="4.75"></div></div>
-    <div class="row"><label>Ship to Amazon / unit</label><div class="ig"><span class="pre">$</span><input id="inbound" type="number" step="0.01" value="0.60"></div></div>
-    <div class="row"><label>Other cost / unit<span class="hint">prep, storage, returns reserve</span></label><div class="ig"><span class="pre">$</span><input id="other" type="number" step="0.01" value="0.50"></div></div>
+    <div class="row"><label>FBA fulfillment fee / unit</label><div class="ig"><span class="pre cur">$</span><input id="fba" type="number" step="0.01" value="4.75"></div></div>
+    <div class="row"><label>Ship to Amazon / unit</label><div class="ig"><span class="pre cur">$</span><input id="inbound" type="number" step="0.01" value="0.60"></div></div>
+    <div class="row"><label>Other cost / unit<span class="hint">prep, storage, returns reserve</span></label><div class="ig"><span class="pre cur">$</span><input id="other" type="number" step="0.01" value="0.50"></div></div>
     <div class="row"><label>Units / month</label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="1" value="300"></div></div>
   </section>
 
@@ -264,8 +265,8 @@
 </footer>
 
 <script>
-// Amazon US referral fee % by category (common defaults; editable).
-const CATS = [
+// Amazon marketplace referral-fee presets by category (indicative, editable).
+const US_CATS = [
   ["Everything Else (default)",15],["Home & Kitchen",15],["Health & Household",15],
   ["Beauty & Personal Care",15],["Toys & Games",15],["Sports & Outdoors",15],
   ["Grocery & Gourmet (>$15)",15],["Grocery & Gourmet (<=$15)",8],
@@ -274,13 +275,53 @@ const CATS = [
   ["Amazon Device Accessories",45],["Furniture",15],["Pet Products",15],
   ["Books",15],["Baby Products",15],["Tools & Home Improvement",15],
 ];
-const $ = id => document.getElementById(id);
-const money = n => (n<0?"-$":"$") + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-const money0 = n => (n<0?"-$":"$") + Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:0});
+const EU_CATS = [
+  ["Everything Else (default)",15],["Home & Kitchen",15],["Health & Personal Care",15],
+  ["Beauty",15],["Toys & Games",15],["Sports & Outdoors",15],
+  ["Electronics",7],["Computers",7],["Cell Phone Accessories",8],
+  ["Clothing & Accessories",15],["Jewellery",20],["Watches",16],
+  ["Pet Products",15],["Books",15],["Baby",15],["Tools & Home Improvement",13],["Furniture",15],
+];
+const CA_CATS = [
+  ["Everything Else (default)",15],["Home & Kitchen",15],["Health & Personal Care",15],
+  ["Beauty",15],["Toys & Games",15],["Sports & Outdoors",15],
+  ["Electronics",8],["Computers",8],["Cell Phone Accessories",8],
+  ["Clothing & Accessories",17],["Jewelry",20],["Watches",16],
+  ["Pet Products",15],["Books",15],["Baby",15],["Tools & Home Improvement",15],
+];
+const MARKETS = {
+  US:{label:"United States (USD $)", cur:"$",  cats:US_CATS},
+  CA:{label:"Canada (CAD C$)",       cur:"C$", cats:CA_CATS},
+  UK:{label:"United Kingdom (GBP £)",cur:"£",  cats:EU_CATS},
+  DE:{label:"Europe (EUR €)",        cur:"€",  cats:EU_CATS},
+};
+let CUR = "$"; // active currency symbol, driven by marketplace
 
-const catSel = $("cat");
-CATS.forEach(([name,pct],i)=>{const o=document.createElement("option");o.value=pct;o.textContent=name;o.dataset.i=i;catSel.appendChild(o);});
+const $ = id => document.getElementById(id);
+const money = n => (n<0?"-":"")+CUR + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const money0 = n => (n<0?"-":"")+CUR + Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:0});
+
+const marketSel = $("market"), catSel = $("cat");
+Object.entries(MARKETS).forEach(([code,m])=>{const o=document.createElement("option");o.value=code;o.textContent=m.label;marketSel.appendChild(o);});
+
+function buildCats(){
+  const m=MARKETS[marketSel.value]||MARKETS.US;
+  catSel.innerHTML="";
+  m.cats.forEach(([name,pct])=>{const o=document.createElement("option");o.value=pct;o.textContent=name;catSel.appendChild(o);});
+}
+const MKT_KEY="marginmaster.market";
+function applyMarket(){
+  const m=MARKETS[marketSel.value]||MARKETS.US;
+  CUR=m.cur;
+  document.querySelectorAll(".cur").forEach(el=>el.textContent=CUR);
+  buildCats();
+  try{localStorage.setItem(MKT_KEY,marketSel.value);}catch(e){}
+  if(typeof calc==="function") calc();
+  if(typeof render==="function") render();
+}
 catSel.addEventListener("change",()=>{ $("refpct").value = catSel.value; calc(); });
+marketSel.addEventListener("change",applyMarket);
+buildCats();
 
 function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
 
@@ -327,7 +368,7 @@ function solve(){
   const fees=s.fba+s.inbound, costs=s.cost+s.other, invest=s.cost+s.inbound+s.other;
   const k=1-s.refpct/100;                 // fraction of price kept after referral fee
   const type=$("tgtType").value, tv=num("tgtVal");
-  $("tgtPre").textContent = type==="net" ? "$" : "%";
+  $("tgtPre").textContent = type==="net" ? CUR : "%";
   let price=NaN, note="";
   if(type==="margin"){ const m=tv/100;
     if(k-m<=0) note=`Impossible: referral fee (${s.refpct}%) + target margin (${tv}%) reach 100% of price.`;
@@ -619,6 +660,10 @@ $("importBtn").onclick=()=>$("csvfile").click();
 $("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
   const rd=new FileReader(); rd.onload=()=>{ importCSV(rd.result); e.target.value=""; }; rd.readAsText(f); };
 
+try{const mk=localStorage.getItem(MKT_KEY); if(mk&&MARKETS[mk]) marketSel.value=mk;}catch(e){}
+CUR=(MARKETS[marketSel.value]||MARKETS.US).cur;
+document.querySelectorAll(".cur").forEach(el=>el.textContent=CUR);
+buildCats();
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 calc(); render();
 </script>
