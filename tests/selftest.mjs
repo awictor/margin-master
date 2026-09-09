@@ -71,6 +71,8 @@ check('compute: net / margin / ROI / breakeven ACOS', () => {
   assert.ok(Math.abs(r.net - 12.14) < 0.01, 'net ' + r.net);
   assert.ok(Math.abs(r.margin - 40.48) < 0.1, 'margin ' + r.margin);
   assert.ok(Math.abs(r.acosBE - 40.48) < 0.1, 'acosBE ' + r.acosBE);
+  // discount room = (price - breakeven)/price; breakeven ~15.71 -> ~47.6%
+  assert.ok(Math.abs(r.discountRoom - 47.6) < 0.5, 'discountRoom ' + r.discountRoom);
 });
 check('compute: breakeven price where net = 0', () => {
   const r = t.compute(base);

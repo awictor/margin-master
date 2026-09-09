@@ -216,9 +216,10 @@
       <div class="stat"><div id="mprofit" class="v">$0</div><div class="k">Monthly profit</div></div>
       <div class="stat"><div id="mrev" class="v">$0</div><div class="k">Monthly revenue</div></div>
     </div>
-    <div class="grid3" style="grid-template-columns:1fr 1fr">
+    <div class="grid3">
       <div class="stat"><div id="maxAd" class="v">$0</div><div class="k">Max ad / unit</div></div>
       <div class="stat"><div id="acosBE" class="v">0%</div><div class="k">Breakeven ACOS</div></div>
+      <div class="stat"><div id="discRoom" class="v">0%</div><div class="k">Discount room</div></div>
     </div>
     <div class="grid3" id="fixedRow" style="grid-template-columns:1fr 1fr;display:none">
       <div class="stat"><div id="beUnits" class="v">—</div><div class="k">Break-even units/mo</div></div>
@@ -540,15 +541,17 @@ function compute(s){
   const fees=s.fba+s.inbound, costs=s.cost+s.other;
   const net = rev - referral - fees - costs, invest=s.cost+s.inbound+s.other;
   const denom = (VAT_ON ? 1/(1+VAT_RATE/100) : 1) - s.refpct/100;
+  const be = denom!==0 ? (fees+costs)/denom : 0;
   return {
-    referral, fees, costs, net, invest, gross, rev, vat,
+    referral, fees, costs, net, invest, gross, rev, vat, be,
     margin: rev>0 ? net/rev*100 : 0,
     roi: invest>0 ? net/invest*100 : 0,
-    be: denom!==0 ? (fees+costs)/denom : 0,
     mprofit: net*s.units, mrev: rev*s.units,
     // Advertising headroom: the most you can spend per ad-driven unit before it loses money.
     maxAd: Math.max(0, net),
-    acosBE: gross>0 ? Math.max(0, net)/gross*100 : 0
+    acosBE: gross>0 ? Math.max(0, net)/gross*100 : 0,
+    // How far the price can fall before net hits zero — headroom for coupons/deals/price wars.
+    discountRoom: (gross>0 && gross>be) ? (gross-be)/gross*100 : 0
   };
 }
 
@@ -572,6 +575,7 @@ function calc(){
   $("mrev").textContent=money0(r.mrev);
   $("maxAd").textContent=money(r.maxAd);
   $("acosBE").textContent=r.acosBE.toFixed(1)+"%";
+  $("discRoom").textContent=r.discountRoom.toFixed(0)+"%";
 
   const ins=insights(s);
   $("insights").innerHTML=ins.map(i=>`<div class="ins ${i.level}"><span class="dot"></span><span>${i.msg}</span></div>`).join("");
@@ -1222,6 +1226,7 @@ document.querySelectorAll(".row").forEach(row=>{
     "Return on order":"Profit from the order as a % of its total cash outlay.",
     "Referral fee %":"Amazon's commission on the sale price; varies by category.",
     "Break-even units/mo":"Units you must sell each month to cover your fixed monthly costs.",
+    "Discount room":"How far you can cut the price (coupons, deals, price wars) before the sale breaks even.",
   };
   const add=(el,def)=>{ if(el.querySelector(".info")) return; const i=document.createElement("span");
     i.className="info"; i.textContent="ⓘ"; i.title=def; i.setAttribute("aria-label",def); el.appendChild(i); };
