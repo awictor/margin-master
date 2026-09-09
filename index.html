@@ -147,6 +147,7 @@
     <div class="row"><label>Ship to Amazon / unit</label><div class="ig"><span class="pre cur">$</span><input id="inbound" type="number" step="0.01" value="0.60"></div></div>
     <div class="row"><label>Other cost / unit<span class="hint">prep, storage, returns reserve</span></label><div class="ig"><span class="pre cur">$</span><input id="other" type="number" step="0.01" value="0.50"></div></div>
     <div class="row"><label>Units / month</label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="1" value="300"></div></div>
+    <div class="row"><label>Fixed monthly costs<span class="hint">software, VA, tools — optional</span></label><div class="ig"><span class="pre cur">$</span><input id="fixed" type="number" step="1" value="0"></div></div>
   </section>
 
   <section class="card result">
@@ -172,6 +173,10 @@
     <div class="grid3" style="grid-template-columns:1fr 1fr">
       <div class="stat"><div id="maxAd" class="v">$0</div><div class="k">Max ad / unit</div></div>
       <div class="stat"><div id="acosBE" class="v">0%</div><div class="k">Breakeven ACOS</div></div>
+    </div>
+    <div class="grid3" id="fixedRow" style="grid-template-columns:1fr 1fr;display:none">
+      <div class="stat"><div id="beUnits" class="v">—</div><div class="k">Break-even units/mo</div></div>
+      <div class="stat"><div id="profitAfter" class="v">$0</div><div class="k">Profit after fixed</div></div>
     </div>
     <div class="saverow">
       <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
@@ -421,6 +426,19 @@ function calc(){
   $("mrev").textContent=money0(r.mrev);
   $("maxAd").textContent=money(r.maxAd);
   $("acosBE").textContent=r.acosBE.toFixed(1)+"%";
+
+  // Fixed monthly costs -> break-even units and profit after fixed
+  const fixed=num("fixed");
+  try{localStorage.setItem("marginmaster.fixed",fixed);}catch(e){}
+  if(fixed>0){
+    $("fixedRow").style.display="grid";
+    const beU = r.net>0 ? Math.ceil(fixed/r.net) : null;
+    const beEl=$("beUnits");
+    if(beU==null){ beEl.textContent="never"; beEl.className="v neg"; }
+    else { const clears=s.units>=beU; beEl.textContent=beU.toLocaleString()+(clears?" ✓":""); beEl.className="v "+(clears?"pos":""); }
+    const after=r.mprofit-fixed;
+    const pa=$("profitAfter"); pa.textContent=money0(after); pa.className="v "+(after>=0?"pos":"neg");
+  } else { $("fixedRow").style.display="none"; }
   solve();
   drawChart();
 }
@@ -463,7 +481,7 @@ function drawChart(){
   svg.innerHTML=g.join("");
   $("chartNote").textContent="Net profit / unit as sale price sweeps "+money0(lo)+"–"+money0(hi)+". Red line = breakeven, dot = your current price.";
 }
-document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units").forEach(el=>el.addEventListener("input",calc));
+document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units,#fixed").forEach(el=>el.addEventListener("input",calc));
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -776,7 +794,12 @@ function fillPrint(){
     row("Max ad spend / unit",money(r.maxAd))+
     row("Breakeven ACOS",r.acosBE.toFixed(1)+"%")+
     row("Monthly profit",money0(r.mprofit))+
-    row("Monthly revenue",money0(r.mrev));
+    row("Monthly revenue",money0(r.mrev))+
+    (num("fixed")>0 ? (
+      row("Fixed monthly costs","-"+money0(num("fixed")))+
+      row("Break-even units / mo", r.net>0?Math.ceil(num("fixed")/r.net).toLocaleString():"never")+
+      row("Profit after fixed",money0(r.mprofit-num("fixed")))
+    ) : "");
 }
 $("printBtn").onclick=()=>{ fillPrint(); window.print(); };
 
@@ -790,6 +813,7 @@ $("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
 
 try{const mk=localStorage.getItem(MKT_KEY); if(mk&&MARKETS[mk]) marketSel.value=mk;}catch(e){}
 applyMarket();
+try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 calc(); render();
 </script>
