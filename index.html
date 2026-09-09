@@ -144,7 +144,7 @@
   <section class="card">
     <h2>Your numbers</h2>
     <div class="row"><label>Marketplace<span class="hint">sets currency + referral presets</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="market"></select></div></div>
-    <div class="row" id="vatRow" style="display:none"><label>Price includes VAT<span class="hint">VAT is deducted from revenue before profit</span></label><div style="display:flex;gap:8px;align-items:center;justify-content:flex-end"><input type="checkbox" id="vatOn" style="width:auto;margin:0"><div class="ig" style="width:82px"><span class="pre">%</span><input id="vatRate" type="number" step="0.5" value="20"></div></div></div>
+    <div class="row" id="vatRow" style="display:none"><label>Price includes VAT/GST<span class="hint">tax is deducted from revenue before profit</span></label><div style="display:flex;gap:8px;align-items:center;justify-content:flex-end"><input type="checkbox" id="vatOn" style="width:auto;margin:0"><div class="ig" style="width:82px"><span class="pre">%</span><input id="vatRate" type="number" step="0.5" value="20"></div></div></div>
     <div class="row"><label>Sale price</label><div class="ig"><span class="pre cur">$</span><input id="price" type="number" step="0.01" value="29.99"></div></div>
     <div class="row"><label>Product cost (landed / unit)<span class="hint">what you pay incl. inbound</span></label><div class="ig"><span class="pre cur">$</span><input id="cost" type="number" step="0.01" value="7.50"></div></div>
     <div class="row"><label>Category<span class="hint">sets referral fee %</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="cat"></select></div></div>
@@ -348,18 +348,22 @@ const CA_CATS = [
   ["Pet Products",15],["Books",15],["Baby",15],["Tools & Home Improvement",15],
 ];
 const MARKETS = {
-  US:{label:"United States (USD $)", cur:"$",  cats:US_CATS, min:0.30, vat:0},
-  CA:{label:"Canada (CAD C$)",       cur:"C$", cats:CA_CATS, min:0.30, vat:0},
-  UK:{label:"United Kingdom (GBP £)",cur:"£",  cats:EU_CATS, min:0.25, vat:20},
-  DE:{label:"Europe (EUR €)",        cur:"€",  cats:EU_CATS, min:0.30, vat:20},
+  US:{label:"United States (USD $)",  cur:"$",   cats:US_CATS, min:0.30, vat:0,  dec:2},
+  CA:{label:"Canada (CAD C$)",        cur:"C$",  cats:CA_CATS, min:0.30, vat:0,  dec:2},
+  UK:{label:"United Kingdom (GBP £)", cur:"£",   cats:EU_CATS, min:0.25, vat:20, dec:2},
+  DE:{label:"Europe (EUR €)",         cur:"€",   cats:EU_CATS, min:0.30, vat:20, dec:2},
+  MX:{label:"Mexico (MXN $)",         cur:"MX$", cats:EU_CATS, min:0,    vat:16, dec:2},
+  AU:{label:"Australia (AUD A$)",     cur:"A$",  cats:EU_CATS, min:0.30, vat:10, dec:2},
+  JP:{label:"Japan (JPY ¥)",          cur:"¥",   cats:EU_CATS, min:30,   vat:10, dec:0},
 };
 let CUR = "$";       // active currency symbol, driven by marketplace
+let CUR_DEC = 2;     // currency decimal places (0 for JPY)
 let MIN_REF = 0.30;  // per-item minimum referral fee floor, driven by marketplace
-let VAT_ON = false;  // treat sale price as VAT-inclusive (UK/EU)
-let VAT_RATE = 0;    // VAT % when VAT_ON
+let VAT_ON = false;  // treat sale price as tax-inclusive (VAT/GST/consumption tax)
+let VAT_RATE = 0;    // tax % when VAT_ON
 
 const $ = id => document.getElementById(id);
-const money = n => (n<0?"-":"")+CUR + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const money = n => (n<0?"-":"")+CUR + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:CUR_DEC,maximumFractionDigits:CUR_DEC});
 const money0 = n => (n<0?"-":"")+CUR + Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:0});
 
 const marketSel = $("market"), catSel = $("cat");
@@ -378,7 +382,7 @@ function syncVAT(){
 }
 function applyMarket(){
   const m=MARKETS[marketSel.value]||MARKETS.US;
-  CUR=m.cur; MIN_REF=m.min;
+  CUR=m.cur; MIN_REF=m.min; CUR_DEC=m.dec;
   document.querySelectorAll(".cur").forEach(el=>el.textContent=CUR);
   $("vatRow").style.display = m.vat>0 ? "flex" : "none";
   if(m.vat>0 && !$("vatRate").value) $("vatRate").value=m.vat;
