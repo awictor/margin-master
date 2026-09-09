@@ -1065,6 +1065,11 @@ function fillPrint(){
       row("Fixed monthly costs","-"+money0(num("fixed")))+
       row("Break-even units / mo", r.net>0?Math.ceil(num("fixed")/r.net).toLocaleString():"never")+
       row("Profit after fixed",money0(r.mprofit-num("fixed")))
+    ) : "")+
+    (num("cycle")>0 ? (
+      row("Turns / year",(365/num("cycle")).toFixed(1))+
+      row("Annualized ROI",annualizeRoi(r.roi,num("cycle")).toFixed(0)+"%")+
+      row("Profit / day",money(r.mprofit/30.44))
     ) : "");
 }
 function fillPrintChart(){
