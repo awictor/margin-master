@@ -2,6 +2,12 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 1.8.0
+- Copy results summary — one-click plain-text summary to the clipboard for chat/notes.
+
+## 1.7.1
+- Per-product notes — annotate saved products (📝), shown and editable in the compare table.
+
 ## 1.7.0
 - Return-rate impact — expected net after returns (each return forgoes the sale plus a lost unit + sunk FBA fee).
 
