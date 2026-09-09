@@ -711,19 +711,24 @@ function importCSV(text){
 // Compact fixed-order encoding: fields joined by "~", base64url in #s=...
 function encodeState(s){
   const arr=FIELDS.map(f=>+(+s[f]).toFixed(4));
-  const name=($("pname").value||"").trim();
-  const raw=(name?name.replace(/~/g,"-"):"")+"|"+arr.join("~");
+  const name=($("pname").value||"").trim().replace(/[~|]/g,"-");
+  // meta section (marketplace, VAT, fixed cost) — appended after the numeric fields, optional on decode
+  const meta=`mkt=${marketSel.value};vat=${VAT_ON?1:0};vr=${VAT_RATE};fx=${num("fixed")}`;
+  const raw=name+"|"+arr.join("~")+"|"+meta;
   return btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
 function decodeState(str){
   try{
     const b=str.replace(/-/g,"+").replace(/_/g,"/");
     const raw=decodeURIComponent(escape(atob(b)));
-    const [name,vals]=raw.split("|");
+    const segs=raw.split("|");
+    const name=segs[0], vals=segs[1], metaStr=segs[2];
     const parts=(vals||"").split("~").map(Number);
     if(parts.length!==FIELDS.length||parts.some(isNaN)) return null;
     const state={}; FIELDS.forEach((f,i)=>state[f]=parts[i]);
-    return {name:name||"",state};
+    let meta=null;
+    if(metaStr){ meta={}; metaStr.split(";").forEach(kv=>{const [k,v]=kv.split("="); if(k) meta[k]=v;}); }
+    return {name:name||"",state,meta};
   }catch{ return null; }
 }
 function showShareMsg(text,ok){ const m=$("shareMsg"); m.textContent=text; m.style.display="block"; m.style.color=ok?"var(--good)":"var(--muted)"; }
@@ -739,9 +744,16 @@ function loadFromHash(){
   const h=location.hash||"";
   const m=h.match(/[#&]s=([^&]+)/); if(!m) return false;
   const d=decodeState(m[1]); if(!d) return false;
+  // apply marketplace/VAT/fixed meta first so currency + VAT reflect the shared context
+  if(d.meta){
+    if(d.meta.mkt && MARKETS[d.meta.mkt]){ marketSel.value=d.meta.mkt; applyMarket(); }
+    if("fx" in d.meta && !isNaN(+d.meta.fx)) $("fixed").value=+d.meta.fx;
+    const m2=MARKETS[marketSel.value]||MARKETS.US;
+    if(m2.vat>0){ $("vatOn").checked = d.meta.vat==="1"; if(d.meta.vr && !isNaN(+d.meta.vr)) $("vatRate").value=+d.meta.vr; }
+    syncVAT();
+  }
   FIELDS.forEach(f=>$(f).value=d.state[f]);
   if(d.name) $("pname").value=d.name;
-  // keep referral% in sync with any matching category preset (cosmetic)
   return true;
 }
 $("shareBtn").onclick=shareLink;
