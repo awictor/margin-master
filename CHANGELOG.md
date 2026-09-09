@@ -2,6 +2,11 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 2.0.0
+- **Product score** — a composite 0–100 quality score (margin, ROI, ad headroom, discount room) with a Strong/Solid/Fair/Weak verdict, shown under the net-profit headline.
+- **Score column** in the compare table — sortable and heat-shaded, so a whole research list ranks by overall quality, not just one metric.
+- Milestone: 9 marketplaces, ~30 features, 19 automated tests in CI, all in one offline `index.html`.
+
 ## 1.8.0
 - Copy results summary — one-click plain-text summary to the clipboard for chat/notes.
 
