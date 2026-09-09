@@ -191,6 +191,7 @@
     <div class="row"><label>Units / month</label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="1" value="300"></div></div>
     <div class="row"><label>Fixed monthly costs<span class="hint">software, VA, tools — optional</span></label><div class="ig"><span class="pre cur">$</span><input id="fixed" type="number" step="1" value="0"></div></div>
     <div class="row"><label>Days to sell inventory<span class="hint">cash cycle — enables velocity metrics</span></label><div class="ig"><span class="pre">#</span><input id="cycle" type="number" step="1" value="0"></div></div>
+    <div style="margin-top:14px;text-align:right"><button id="resetBtn" class="btn ghost">↺ Reset inputs</button></div>
   </section>
 
   <section class="card result">
@@ -1111,6 +1112,17 @@ function loadBundleFromHash(){
   store(arr); render(); return items.length;
 }
 $("shareListBtn").onclick=shareBundle;
+
+/* ---- Reset inputs to defaults (keeps saved products & marketplace) ---- */
+const INPUT_DEFAULTS={price:"29.99",cost:"7.50",refpct:"15",fba:"4.75",inbound:"0.60",other:"0.50",
+  units:"300",fixed:"0",cycle:"0",dl:"9",dw:"6",dh:"2",dwt:"0.8",poQty:"500",goalProfit:"0"};
+function resetAll(){
+  if(!confirm("Reset all inputs to defaults? Your saved products and marketplace are kept.")) return;
+  Object.entries(INPUT_DEFAULTS).forEach(([id,v])=>{ if($(id)) $(id).value=v; });
+  $("pname").value=""; if(catSel) catSel.selectedIndex=0;
+  calc(); runFBA(); renderPO(); window.scrollTo({top:0,behavior:"smooth"});
+}
+$("resetBtn").onclick=resetAll;
 
 $("saveBtn").onclick=saveProduct;
 $("pname").addEventListener("keydown",e=>{ if(e.key==="Enter") saveProduct(); });
