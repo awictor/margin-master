@@ -111,8 +111,10 @@
     </div>
     <div class="saverow">
       <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
+      <button id="shareBtn" class="btn ghost" title="Copy a link that reopens these exact numbers">🔗 Share</button>
       <button id="saveBtn" class="btn primary">Save</button>
     </div>
+    <div id="shareMsg" class="empty" style="display:none"></div>
   </section>
 </div>
 
@@ -463,6 +465,45 @@ function importCSV(text){
   alert("Imported "+added+" product"+(added===1?"":"s")+".");
 }
 
+/* ---- Shareable read-only links (state encoded in URL hash) ---- */
+// Compact fixed-order encoding: fields joined by "~", base64url in #s=...
+function encodeState(s){
+  const arr=FIELDS.map(f=>+(+s[f]).toFixed(4));
+  const name=($("pname").value||"").trim();
+  const raw=(name?name.replace(/~/g,"-"):"")+"|"+arr.join("~");
+  return btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function decodeState(str){
+  try{
+    const b=str.replace(/-/g,"+").replace(/_/g,"/");
+    const raw=decodeURIComponent(escape(atob(b)));
+    const [name,vals]=raw.split("|");
+    const parts=(vals||"").split("~").map(Number);
+    if(parts.length!==FIELDS.length||parts.some(isNaN)) return null;
+    const state={}; FIELDS.forEach((f,i)=>state[f]=parts[i]);
+    return {name:name||"",state};
+  }catch{ return null; }
+}
+function showShareMsg(text,ok){ const m=$("shareMsg"); m.textContent=text; m.style.display="block"; m.style.color=ok?"var(--good)":"var(--muted)"; }
+function shareLink(){
+  const enc=encodeState(readState());
+  const url=location.origin+location.pathname+"#s="+enc;
+  history.replaceState(null,"",url);
+  const done=()=>showShareMsg("✓ Link copied — reopens these exact numbers.",true);
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(done,()=>showShareMsg(url,false)); }
+  else showShareMsg(url,false);
+}
+function loadFromHash(){
+  const h=location.hash||"";
+  const m=h.match(/[#&]s=([^&]+)/); if(!m) return false;
+  const d=decodeState(m[1]); if(!d) return false;
+  FIELDS.forEach(f=>$(f).value=d.state[f]);
+  if(d.name) $("pname").value=d.name;
+  // keep referral% in sync with any matching category preset (cosmetic)
+  return true;
+}
+$("shareBtn").onclick=shareLink;
+
 $("saveBtn").onclick=saveProduct;
 $("pname").addEventListener("keydown",e=>{ if(e.key==="Enter") saveProduct(); });
 $("clearBtn").onclick=()=>{ if(confirm("Delete all saved products?")){ store([]); render(); } };
@@ -471,6 +512,7 @@ $("importBtn").onclick=()=>$("csvfile").click();
 $("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
   const rd=new FileReader(); rd.onload=()=>{ importCSV(rd.result); e.target.value=""; }; rd.readAsText(f); };
 
+if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 calc(); render();
 </script>
 </body>

@@ -19,6 +19,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Bulk CSV import + ranking** — drop a supplier/research CSV, auto-map columns, rank by any metric with sortable headers
 - ✅ **Target-price solver** — solve the exact sale price to hit a target margin %, ROI %, or net $/unit, then one-click apply it
 - ✅ **FBA fee estimator** — dimensions + weight → US size tier → estimated fulfillment fee (dimensional-weight aware), one-click apply
+- ✅ **Shareable links** — copy a link that reopens the exact numbers (state encoded in the URL hash, nothing sent to a server)
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design
 
 ## Run
@@ -37,7 +38,7 @@ Open `index.html` in any browser. That's it. Or host it free on GitHub Pages / N
 - [x] Bulk CSV import + best-margin ranking — flexible header mapping, sortable columns
 - [x] Repricing / target-margin solver — margin %, ROI %, or net $/unit
 - [x] Size-tier → FBA fee auto-estimate — small/large standard, dimensional weight
-- [ ] Shareable read-only result links
+- [x] Shareable read-only result links — state encoded in URL hash
 - [ ] PDF export for sourcing decisions
 
 ## Disclaimer
