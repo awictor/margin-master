@@ -346,6 +346,17 @@
           <div class="stat"><div id="goalRevenue" class="v">—</div><div class="k">Sales / month</div></div>
         </div>
       </div>
+      <div class="sline" style="margin-top:16px">
+        <span>With</span>
+        <div class="ig" style="width:120px"><span class="pre cur">$</span><input id="poBudget" type="number" step="100" value="0"></div>
+        <span>of capital you can order:</span>
+      </div>
+      <div class="solveout" id="budgetRow" style="display:none">
+        <div class="solvestats">
+          <div class="stat"><div id="poUnits" class="v">—</div><div class="k">Units affordable</div></div>
+          <div class="stat"><div id="poBudgetProfit" class="v">—</div><div class="k">Profit if sold through</div></div>
+        </div>
+      </div>
     </div>
   </section>
 </div>
@@ -612,6 +623,13 @@ function goalPlan(s,target){
   return { units, revenue: isFinite(units) ? units*s.price : Infinity };
 }
 
+// How many units a capital budget affords, and profit if that order sells through.
+function budgetPlan(s,budget){
+  const r=compute(s), invest=r.invest;
+  const units = invest>0 ? Math.floor(budget/invest) : 0;
+  return {units, profit: units*r.net};
+}
+
 // Purchase-order economics for a given order quantity.
 function poPlan(s,qty){
   const r=compute(s), invest=r.invest;
@@ -821,8 +839,17 @@ function renderPO(s){
     $("goalUnits").textContent = isFinite(g.units) ? g.units.toLocaleString() : "never";
     $("goalRevenue").textContent = isFinite(g.revenue) ? money0(g.revenue) : "—";
   } else { $("goalRow").style.display="none"; }
+  const budget=num("poBudget");
+  try{localStorage.setItem("marginmaster.budget",budget);}catch(e){}
+  if(budget>0){
+    $("budgetRow").style.display="flex";
+    const b=budgetPlan(s,budget);
+    $("poUnits").textContent=b.units.toLocaleString();
+    const bp=$("poBudgetProfit"); bp.textContent=money0(b.profit); bp.className="v "+(b.profit>=0?"pos":"neg");
+  } else { $("budgetRow").style.display="none"; }
 }
 $("poQty").addEventListener("input",()=>renderPO());
+$("poBudget").addEventListener("input",()=>renderPO());
 $("goalProfit").addEventListener("input",()=>renderPO());
 
 // Competitor price-match check
@@ -1430,6 +1457,7 @@ try{const rsf=localStorage.getItem("marginmaster.rssafety"); if(rsf!=null) $("rs
 try{const rh=localStorage.getItem("marginmaster.rshand"); if(rh!=null) $("rsHand").value=rh;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
+try{const bg=localStorage.getItem("marginmaster.budget"); if(bg!=null) $("poBudget").value=bg;}catch(e){}
 try{const cp=localStorage.getItem("marginmaster.comp"); if(cp!=null) $("compPrice").value=cp;}catch(e){}
 try{const mc=localStorage.getItem("marginmaster.mpcost"); if(mc!=null) $("mpUnitCost").value=mc;}catch(e){}
 try{const ms=localStorage.getItem("marginmaster.mpsize"); if(ms!=null) $("mpSize").value=ms;}catch(e){}

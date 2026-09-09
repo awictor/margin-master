@@ -54,7 +54,7 @@ const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
-  returnsAdjustedNet, summaryText, scoreProduct, reorderPoint,
+  returnsAdjustedNet, summaryText, scoreProduct, reorderPoint, budgetPlan,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -218,6 +218,13 @@ check('reorderPoint: covers lead + safety at daily rate', () => {
   // 300/mo -> 9.855/day; (30+14) days -> 433.6 -> 434
   assert.equal(t.reorderPoint(300, 30, 14), 434);
   assert.equal(t.reorderPoint(0, 30, 14), 0);
+});
+
+check('budgetPlan: units a budget affords + profit', () => {
+  // invest = 8.6; $5000 -> floor(581.4) = 581 units; profit 581 * 12.14
+  const b = t.budgetPlan(base, 5000);
+  assert.equal(b.units, 581);
+  assert.ok(Math.abs(b.profit - 581 * 12.14) < 1);
 });
 
 console.log(`\n${n} checks passed.`);
