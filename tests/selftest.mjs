@@ -30,6 +30,7 @@ globalThis.document = {
   createElement() { return el(); },
   querySelectorAll() { return []; },
   querySelector() { return null; },
+  addEventListener() {}, removeEventListener() {},
   documentElement: el(),
 };
 globalThis.localStorage = (() => { const m = {}; return {

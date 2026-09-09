@@ -397,6 +397,7 @@
 <footer>
   <b>MarginMaster</b> · offline-first Amazon FBA profit calculator · <a href="https://github.com/awictor/margin-master">source on GitHub</a><br>
   Fees are indicative estimates — verify against your Seller Central fee preview before sourcing.<br>
+  Shortcuts: <b>/</b> focus price · <b>s</b> save · <b>d</b> dark mode<br>
   © <span id="yr">2026</span> Alex Wictor · MIT licensed · v1.0.0
 </footer>
 
@@ -1123,6 +1124,16 @@ function resetAll(){
   calc(); runFBA(); renderPO(); window.scrollTo({top:0,behavior:"smooth"});
 }
 $("resetBtn").onclick=resetAll;
+
+/* ---- Keyboard shortcuts: "/" focus price, "s" save, "d" dark mode ---- */
+document.addEventListener("keydown",e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const typing=/^(INPUT|SELECT|TEXTAREA)$/.test(e.target&&e.target.tagName);
+  if(e.key==="/"){ e.preventDefault(); const p=$("price"); p.focus(); if(p.select) p.select(); return; }
+  if(typing) return;
+  if(e.key==="s"){ e.preventDefault(); saveProduct(); }
+  else if(e.key==="d"){ $("themeBtn").click(); }
+});
 
 $("saveBtn").onclick=saveProduct;
 $("pname").addEventListener("keydown",e=>{ if(e.key==="Enter") saveProduct(); });
