@@ -150,6 +150,37 @@
 
 <div class="fullwrap">
   <section class="card">
+    <h2>FBA fee estimator <span class="badge">US · standard-size</span></h2>
+    <div class="solver">
+      <div class="sline">
+        <span>Dimensions</span>
+        <div class="ig" style="width:78px"><span class="pre"></span><input id="dl" type="number" step="0.1" value="9" placeholder="L"></div>
+        <span>×</span>
+        <div class="ig" style="width:78px"><span class="pre"></span><input id="dw" type="number" step="0.1" value="6" placeholder="W"></div>
+        <span>×</span>
+        <div class="ig" style="width:78px"><span class="pre"></span><input id="dh" type="number" step="0.1" value="2" placeholder="H"></div>
+        <span>in,&nbsp; weight</span>
+        <div class="ig" style="width:90px"><span class="pre"></span><input id="dwt" type="number" step="0.05" value="0.8"></div>
+        <select id="wunit" style="width:70px"><option value="lb">lb</option><option value="oz">oz</option></select>
+      </div>
+      <div class="solveout">
+        <div>
+          <div class="k">Size tier</div>
+          <div id="feeTier" style="font-size:20px;font-weight:600;margin-top:2px">—</div>
+        </div>
+        <div>
+          <div class="k">Est. fulfillment fee</div>
+          <div id="feeVal" class="big">$0.00</div>
+        </div>
+        <button id="applyFee" class="btn primary">Use this fee ↑</button>
+      </div>
+      <div id="feeNote" class="empty"></div>
+    </div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
     <div class="tbltools">
       <h2 style="margin:0">Saved products <span id="count" class="badge">0</span></h2>
       <div class="toolbtns">
@@ -262,6 +293,55 @@ let solvedPrice=null;
 $("tgtType").addEventListener("change",solve);
 $("tgtVal").addEventListener("input",solve);
 $("applyPrice").onclick=()=>{ if(solvedPrice!=null){ $("price").value=solvedPrice.toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
+
+/* ---- FBA fee estimator (US, non-apparel, indicative 2024 rates — editable) ---- */
+// Small-standard fee by unit weight in oz (upper bound -> fee).
+const SMALL=[[2,3.06],[4,3.15],[6,3.24],[8,3.33],[10,3.43],[12,3.53],[14,3.60],[16,3.65]];
+// Large-standard fee by shipping weight; oz bands then lb bands (upper bound lb -> fee).
+const LARGE_OZ=[[4,3.68],[8,3.90],[12,4.15],[16,4.55]];
+const LARGE_LB=[[1.5,4.99],[2,5.37],[2.5,5.52],[3,5.87]];
+function pick(table,x){ for(const [ub,fee] of table) if(x<=ub+1e-9) return fee; return null; }
+
+function estimateFBA(l,w,h,lb){
+  if([l,w,h,lb].some(v=>!(v>0))) return {tier:"—",fee:null,note:"Enter positive dimensions and weight."};
+  const dims=[l,w,h].sort((a,b)=>b-a); const [lng,med,srt]=dims;
+  const oz=lb*16;
+  const smallOK = lng<=15 && med<=12 && srt<=0.75 && oz<=16;
+  const largeOK = lng<=18 && med<=14 && srt<=8 && lb<=20;
+  if(smallOK){
+    return {tier:"Small standard", fee:pick(SMALL,oz),
+      note:"Rates are indicative US 2024 non-apparel figures — verify in Seller Central. Fee is editable after applying."};
+  }
+  if(largeOK){
+    // large standard uses greater of unit weight and dimensional weight (L×W×H/139) once over 1 lb
+    const dimLb=(l*w*h)/139; const shipLb=lb>1?Math.max(lb,dimLb):lb; const shipOz=shipLb*16;
+    let fee, wt;
+    if(shipLb<=1){ fee=pick(LARGE_OZ,shipOz); wt=shipOz.toFixed(1)+" oz"; }
+    else { fee=pick(LARGE_LB,shipLb); wt=shipLb.toFixed(2)+" lb";
+      if(fee==null && shipLb<=20){ fee=5.87+Math.ceil((shipLb-3)/0.5)*0.08; } }
+    const dimNote = (lb<=1||dimLb<=lb) ? "" : ` (billed on dim. weight ${dimLb.toFixed(2)} lb)`;
+    return {tier:"Large standard", fee,
+      note:`Shipping weight ${wt}${dimNote}. Indicative US 2024 rates — verify in Seller Central.`};
+  }
+  return {tier:"Oversize / bulky", fee:null,
+    note:"Outside standard-size tiers — oversize fees vary widely. Enter the fee manually from your Seller Central fee preview."};
+}
+
+let estFee=null;
+function runFBA(){
+  const l=num("dl"),w=num("dw"),h=num("dh");
+  const lb = $("wunit").value==="oz" ? num("dwt")/16 : num("dwt");
+  const {tier,fee,note}=estimateFBA(l,w,h,lb);
+  $("feeTier").textContent=tier;
+  estFee = (fee!=null && isFinite(fee)) ? fee : null;
+  $("feeVal").textContent = estFee!=null ? money(estFee) : "—";
+  $("feeNote").textContent = note;
+  $("applyFee").disabled = estFee==null;
+}
+["dl","dw","dh","dwt"].forEach(id=>$(id).addEventListener("input",runFBA));
+$("wunit").addEventListener("change",runFBA);
+$("applyFee").onclick=()=>{ if(estFee!=null){ $("fba").value=estFee.toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
+runFBA();
 
 /* ---- Saved products (localStorage) ---- */
 const KEY="marginmaster.products.v1";
