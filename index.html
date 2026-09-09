@@ -153,6 +153,10 @@
       <div class="stat"><div id="mprofit" class="v">$0</div><div class="k">Monthly profit</div></div>
       <div class="stat"><div id="mrev" class="v">$0</div><div class="k">Monthly revenue</div></div>
     </div>
+    <div class="grid3" style="grid-template-columns:1fr 1fr">
+      <div class="stat"><div id="maxAd" class="v">$0</div><div class="k">Max ad / unit</div></div>
+      <div class="stat"><div id="acosBE" class="v">0%</div><div class="k">Breakeven ACOS</div></div>
+    </div>
     <div class="saverow">
       <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
       <button id="printBtn" class="btn ghost" title="Print or save a one-page sourcing sheet as PDF">🖨 PDF</button>
@@ -345,7 +349,10 @@ function compute(s){
     margin: s.price>0 ? net/s.price*100 : 0,
     roi: invest>0 ? net/invest*100 : 0,
     be: (1-s.refpct/100)!==0 ? (fees+costs)/(1-s.refpct/100) : 0,
-    mprofit: net*s.units, mrev: s.price*s.units
+    mprofit: net*s.units, mrev: s.price*s.units,
+    // Advertising headroom: the most you can spend per ad-driven unit before it loses money.
+    maxAd: Math.max(0, net),
+    acosBE: s.price>0 ? Math.max(0, net)/s.price*100 : 0
   };
 }
 
@@ -364,6 +371,8 @@ function calc(){
   $("b_net").textContent=money(r.net);
   $("mprofit").textContent=money0(r.mprofit);
   $("mrev").textContent=money0(r.mrev);
+  $("maxAd").textContent=money(r.maxAd);
+  $("acosBE").textContent=r.acosBE.toFixed(1)+"%";
   solve();
 }
 document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units").forEach(el=>el.addEventListener("input",calc));
@@ -673,6 +682,8 @@ function fillPrint(){
     row("Margin",r.margin.toFixed(1)+"%")+
     row("ROI",r.roi.toFixed(0)+"%")+
     row("Breakeven price",money(r.be))+
+    row("Max ad spend / unit",money(r.maxAd))+
+    row("Breakeven ACOS",r.acosBE.toFixed(1)+"%")+
     row("Monthly profit",money0(r.mprofit))+
     row("Monthly revenue",money0(r.mrev));
 }

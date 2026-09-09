@@ -24,6 +24,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Dark mode** — toggle that persists and respects your system preference (no flash on load)
 - ✅ **Multi-marketplace** — US / CA / UK / EU fee sets with the right currency symbol and per-region category referral presets (remembers your choice)
 - ✅ **Storage-fee estimator** — unit volume (ft³) from your dimensions × standard and Oct–Dec peak rates, one-click add to costs
+- ✅ **PPC / ACOS breakeven** — max ad spend per unit and breakeven ACOS % before the sale loses money (shown in results + PDF)
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design
 
 ## Run
