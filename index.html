@@ -96,6 +96,11 @@
   .solveout .big{margin:0;color:var(--accent)}
   .solvestats{display:flex;gap:10px}
   .solvestats .stat{min-width:92px}
+  .sens{border-collapse:collapse;font-size:12px;min-width:440px}
+  .sens th,.sens td{padding:7px 10px;text-align:center;border:1px solid var(--line);white-space:nowrap}
+  .sens th{font-size:11px;color:var(--muted);font-weight:600;background:var(--bg)}
+  .sens td.p{color:var(--good);font-weight:600} .sens td.n{color:var(--bad);font-weight:600}
+  .sens td.mid{outline:2px solid var(--accent);outline-offset:-2px}
   /* print sourcing sheet */
   #printsheet{display:none}
   @media print{
@@ -193,6 +198,14 @@
     <h2>Profit vs. price</h2>
     <svg id="chart" viewBox="0 0 640 240" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Net profit per unit as the sale price varies"></svg>
     <div id="chartNote" class="empty" style="padding:2px 0 0"></div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
+    <h2>Sensitivity — net profit / unit</h2>
+    <div id="sensHost" style="overflow-x:auto"></div>
+    <div class="empty" style="padding-top:6px">Rows vary your <b>sale price</b>, columns vary <b>product cost</b>. Green cells stay profitable; the outlined cell is today's numbers.</div>
   </section>
 </div>
 
@@ -441,6 +454,29 @@ function calc(){
   } else { $("fixedRow").style.display="none"; }
   solve();
   drawChart();
+  drawSensitivity();
+}
+
+// Sensitivity matrix: net profit/unit as sale price (rows) and product cost (cols) each shift ±10/20%.
+function drawSensitivity(){
+  const host=$("sensHost"); if(!host) return;
+  const s=readState();
+  const pds=[20,10,0,-10,-20], cds=[-20,-10,0,10,20];
+  const pct=d=>(d>0?"+":"")+d+"%";
+  let h='<table class="sens"><thead><tr><th>price&nbsp;↓ \\ cost&nbsp;→</th>';
+  cds.forEach(cd=>h+=`<th>${pct(cd)}</th>`);
+  h+='</tr></thead><tbody>';
+  pds.forEach(pd=>{
+    h+=`<tr><th>${pct(pd)}</th>`;
+    cds.forEach(cd=>{
+      const net=compute({...s, price:s.price*(1+pd/100), cost:s.cost*(1+cd/100)}).net;
+      const cls=(pd===0&&cd===0?"mid ":"")+(net>=0?"p":"n");
+      h+=`<td class="${cls}">${money(net)}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  host.innerHTML=h;
 }
 
 // Inline-SVG net-profit-vs-price curve with breakeven + current-price markers.
