@@ -54,7 +54,7 @@ const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
-  returnsAdjustedNet, summaryText, scoreProduct,
+  returnsAdjustedNet, summaryText, scoreProduct, reorderPoint,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -212,6 +212,12 @@ check('scoreProduct: 0–100 in range, loss = Unviable, strong base', () => {
   const loss = t.scoreProduct({ ...base, price: 10, cost: 8, fba: 4, inbound: 0.5, other: 0.5 });
   assert.equal(loss.score, 0);
   assert.equal(loss.label, 'Unviable');
+});
+
+check('reorderPoint: covers lead + safety at daily rate', () => {
+  // 300/mo -> 9.855/day; (30+14) days -> 433.6 -> 434
+  assert.equal(t.reorderPoint(300, 30, 14), 434);
+  assert.equal(t.reorderPoint(0, 30, 14), 0);
 });
 
 console.log(`\n${n} checks passed.`);

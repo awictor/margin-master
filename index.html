@@ -372,6 +372,31 @@
   </section>
 </div>
 
+<div class="fullwrap">
+  <section class="card">
+    <h2>Restock planner</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>Lead time</span>
+        <div class="ig" style="width:80px"><span class="pre">#</span><input id="rsLead" type="number" step="1" value="30"></div>
+        <span>days, safety stock</span>
+        <div class="ig" style="width:80px"><span class="pre">#</span><input id="rsSafety" type="number" step="1" value="14"></div>
+        <span>days, on hand</span>
+        <div class="ig" style="width:90px"><span class="pre">#</span><input id="rsHand" type="number" step="1" value="0"></div>
+        <span>units.</span>
+      </div>
+      <div class="solveout">
+        <div class="solvestats">
+          <div class="stat"><div id="rsDaily" class="v">—</div><div class="k">Daily sales</div></div>
+          <div class="stat"><div id="rsPoint" class="v">—</div><div class="k">Reorder point</div></div>
+          <div class="stat"><div id="rsCover" class="v">—</div><div class="k">Days of cover</div></div>
+        </div>
+        <div id="rsStatus" style="font-weight:700"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
 <div class="fullwrap" id="fba-sec">
   <section class="card">
     <h2>FBA fee estimator <span class="badge">US · standard-size</span></h2>
@@ -549,6 +574,9 @@ function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 // sale (net) and incurring a per-return loss ≈ product cost + FBA fee (unit sunk, fee unrecovered).
 function returnsAdjustedNet(net,cost,fba,ratePct){ const r=Math.max(0,ratePct)/100; return (1-r)*net - r*(cost+fba); }
 
+// Reorder point in units: cover lead time + safety stock at the current daily sales rate.
+function reorderPoint(unitsPerMonth,leadDays,safetyDays){ return Math.ceil((unitsPerMonth/30.44)*(Math.max(0,leadDays)+Math.max(0,safetyDays))); }
+
 // Composite 0–100 product-quality score from margin, ROI, discount room, and ad headroom.
 function scoreProduct(s){
   const r=compute(s);
@@ -679,6 +707,7 @@ function calc(){
   renderPO(s);
   renderMatch(s);
   renderMultipack(s);
+  renderRestock(s);
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");
@@ -824,6 +853,21 @@ function renderMultipack(s){
 $("mpSize").addEventListener("input",()=>renderMultipack());
 $("mpUnitCost").addEventListener("input",()=>renderMultipack());
 $("mpApply").onclick=()=>{ const per=num("mpUnitCost"),size=num("mpSize"); if(size>0){ $("cost").value=(per*size).toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
+
+// Restock planner: reorder point + days of cover from velocity and lead time
+function renderRestock(s){
+  s=s||readState(); const lead=num("rsLead"), safety=num("rsSafety"), hand=num("rsHand");
+  try{localStorage.setItem("marginmaster.rslead",lead);localStorage.setItem("marginmaster.rssafety",safety);localStorage.setItem("marginmaster.rshand",hand);}catch(e){}
+  const daily=s.units/30.44, point=reorderPoint(s.units,lead,safety);
+  $("rsDaily").textContent = s.units>0 ? daily.toFixed(1) : "—";
+  $("rsPoint").textContent = s.units>0 ? point.toLocaleString() : "—";
+  $("rsCover").textContent = (hand>0&&daily>0) ? Math.round(hand/daily)+" days" : "—";
+  const st=$("rsStatus");
+  if(hand<=0){ st.textContent="Enter units on hand for a reorder signal."; st.style.color="var(--muted)"; }
+  else if(hand<=point){ st.textContent="⚠ Reorder now — on hand is at or below the reorder point."; st.style.color="var(--bad)"; }
+  else { const days=daily>0?Math.round((hand-point)/daily):0; st.textContent=`✓ Stock OK — reorder in ~${Math.max(0,days)} days.`; st.style.color="var(--good)"; }
+}
+["rsLead","rsSafety","rsHand"].forEach(id=>$(id).addEventListener("input",()=>renderRestock()));
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -1381,6 +1425,9 @@ document.querySelectorAll(".row").forEach(row=>{
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle").value=cy;}catch(e){}
 try{const rt=localStorage.getItem("marginmaster.returns"); if(rt!=null) $("returns").value=rt;}catch(e){}
+try{const rl=localStorage.getItem("marginmaster.rslead"); if(rl!=null) $("rsLead").value=rl;}catch(e){}
+try{const rsf=localStorage.getItem("marginmaster.rssafety"); if(rsf!=null) $("rsSafety").value=rsf;}catch(e){}
+try{const rh=localStorage.getItem("marginmaster.rshand"); if(rh!=null) $("rsHand").value=rh;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 try{const cp=localStorage.getItem("marginmaster.comp"); if(cp!=null) $("compPrice").value=cp;}catch(e){}
