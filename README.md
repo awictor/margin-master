@@ -25,7 +25,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Shareable links** — copy a link that reopens the exact numbers *and* marketplace, VAT, and fixed-cost context (URL hash, nothing sent to a server; older links stay valid)
 - ✅ **PDF sourcing sheet** — one-click clean, printable one-pager with a sourcing verdict and the profit-vs-price chart (print → Save as PDF)
 - ✅ **Dark mode** — toggle that persists and respects your system preference (no flash on load)
-- ✅ **Multi-marketplace** — US / CA / UK / EU / MX / AU / JP fee sets with the right currency symbol (yen shows no decimals), tax rate, minimum referral, and per-region category presets (remembers your choice)
+- ✅ **Multi-marketplace** — US / CA / UK / EU / MX / AU / JP / IN / AE fee sets with the right currency symbol (yen & rupee show no decimals), tax rate, minimum referral, and per-region category presets (remembers your choice)
 - ✅ **Storage-fee estimator** — unit volume (ft³) from your dimensions × standard and Oct–Dec peak rates, auto-highlights the current season and adds the in-season figure to costs
 - ✅ **PPC / ACOS breakeven** — max ad spend per unit and breakeven ACOS % before the sale loses money (shown in results + PDF)
 - ✅ **Accurate referral fees** — per-item minimum floor ($0.30 US / £0.25 UK etc.) and tiered US apparel presets (5% ≤$15, 10%, 17%)
