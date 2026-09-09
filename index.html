@@ -101,6 +101,7 @@
   .sens th{font-size:11px;color:var(--muted);font-weight:600;background:var(--bg)}
   .sens td.p{color:var(--good);font-weight:600} .sens td.n{color:var(--bad);font-weight:600}
   .sens td.mid{outline:2px solid var(--accent);outline-offset:-2px}
+  .stat.seasonhot{outline:2px solid var(--accent);outline-offset:-2px}
   /* print sourcing sheet */
   #printsheet{display:none}
   @media print{
@@ -271,11 +272,12 @@
       <div class="solveout" style="border-top:1px solid var(--line);padding-top:14px">
         <div><div class="k">Unit volume</div><div id="stVol" style="font-size:20px;font-weight:600;margin-top:2px">—</div></div>
         <div class="solvestats">
-          <div class="stat"><div id="stStd" class="v">—</div><div class="k">Storage/mo (Jan–Sep)</div></div>
-          <div class="stat"><div id="stPeak" class="v">—</div><div class="k">Storage/mo (Oct–Dec)</div></div>
+          <div class="stat" id="boxStd"><div id="stStd" class="v">—</div><div class="k">Storage/mo (Jan–Sep)</div></div>
+          <div class="stat" id="boxPeak"><div id="stPeak" class="v">—</div><div class="k">Storage/mo (Oct–Dec)</div></div>
         </div>
-        <button id="addStorage" class="btn ghost" title="Add standard monthly storage to Other cost / unit">+ Add to Other cost ↑</button>
+        <button id="addStorage" class="btn ghost" title="Add monthly storage to Other cost / unit">+ Add to Other cost ↑</button>
       </div>
+      <div id="stSeason" class="empty" style="display:none"></div>
     </div>
   </section>
 </div>
@@ -605,15 +607,26 @@ function runFBA(){
   // Monthly storage from unit volume (ft³ = L×W×H / 1728).
   const vol = (l>0&&w>0&&h>0) ? (l*w*h)/1728 : 0;
   const rates = tier.indexOf("standard")>=0 ? STORAGE.standard : STORAGE.oversize;
+  const peak = [9,10,11].indexOf(new Date().getMonth())>=0; // Oct–Dec = peak storage season
   if(vol>0){
-    estStorage = vol*rates[0];
+    estStorage = vol*(peak?rates[1]:rates[0]); // add the in-season rate by default
     $("stVol").textContent = vol.toFixed(3)+" ft³";
     $("stStd").textContent = money(vol*rates[0]);
     $("stPeak").textContent = money(vol*rates[1]);
+    $("boxStd").classList.toggle("seasonhot",!peak);
+    $("boxPeak").classList.toggle("seasonhot",peak);
+    $("addStorage").textContent = "+ Add "+(peak?"peak":"standard")+" storage ↑";
     $("addStorage").disabled=false;
+    const sn=$("stSeason");
+    sn.style.display="block";
+    sn.textContent = peak
+      ? "🎄 You're in Oct–Dec peak season — storage costs ~3× the base rate. Add-to-cost uses the peak figure."
+      : "Currently in the Jan–Sep base storage season.";
   } else {
     estStorage=null;
     $("stVol").textContent="—"; $("stStd").textContent="—"; $("stPeak").textContent="—";
+    $("boxStd").classList.remove("seasonhot"); $("boxPeak").classList.remove("seasonhot");
+    $("stSeason").style.display="none";
     $("addStorage").disabled=true;
   }
 }

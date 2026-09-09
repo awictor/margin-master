@@ -23,7 +23,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **PDF sourcing sheet** — one-click clean, printable one-pager with a sourcing verdict (print → Save as PDF)
 - ✅ **Dark mode** — toggle that persists and respects your system preference (no flash on load)
 - ✅ **Multi-marketplace** — US / CA / UK / EU fee sets with the right currency symbol and per-region category referral presets (remembers your choice)
-- ✅ **Storage-fee estimator** — unit volume (ft³) from your dimensions × standard and Oct–Dec peak rates, one-click add to costs
+- ✅ **Storage-fee estimator** — unit volume (ft³) from your dimensions × standard and Oct–Dec peak rates, auto-highlights the current season and adds the in-season figure to costs
 - ✅ **PPC / ACOS breakeven** — max ad spend per unit and breakeven ACOS % before the sale loses money (shown in results + PDF)
 - ✅ **Accurate referral fees** — per-item minimum floor ($0.30 US / £0.25 UK etc.) and tiered US apparel presets (5% ≤$15, 10%, 17%)
 - ✅ **Fixed-cost break-even** — enter monthly fixed costs (tools, VA, subscriptions) to see units/month needed to cover them and profit after fixed
