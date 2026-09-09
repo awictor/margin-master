@@ -283,7 +283,8 @@ const US_CATS = [
   ["Beauty & Personal Care",15],["Toys & Games",15],["Sports & Outdoors",15],
   ["Grocery & Gourmet (>$15)",15],["Grocery & Gourmet (<=$15)",8],
   ["Electronics",8],["Cell Phone Accessories",8],["Computers",8],
-  ["Clothing & Accessories",17],["Jewelry",20],["Watches",16],
+  ["Clothing (≤$15)",5],["Clothing ($15.01–$20)",10],["Clothing (>$20)",17],
+  ["Jewelry",20],["Watches",16],
   ["Amazon Device Accessories",45],["Furniture",15],["Pet Products",15],
   ["Books",15],["Baby Products",15],["Tools & Home Improvement",15],
 ];
@@ -302,12 +303,13 @@ const CA_CATS = [
   ["Pet Products",15],["Books",15],["Baby",15],["Tools & Home Improvement",15],
 ];
 const MARKETS = {
-  US:{label:"United States (USD $)", cur:"$",  cats:US_CATS},
-  CA:{label:"Canada (CAD C$)",       cur:"C$", cats:CA_CATS},
-  UK:{label:"United Kingdom (GBP £)",cur:"£",  cats:EU_CATS},
-  DE:{label:"Europe (EUR €)",        cur:"€",  cats:EU_CATS},
+  US:{label:"United States (USD $)", cur:"$",  cats:US_CATS, min:0.30},
+  CA:{label:"Canada (CAD C$)",       cur:"C$", cats:CA_CATS, min:0.30},
+  UK:{label:"United Kingdom (GBP £)",cur:"£",  cats:EU_CATS, min:0.25},
+  DE:{label:"Europe (EUR €)",        cur:"€",  cats:EU_CATS, min:0.30},
 };
-let CUR = "$"; // active currency symbol, driven by marketplace
+let CUR = "$";      // active currency symbol, driven by marketplace
+let MIN_REF = 0.30; // per-item minimum referral fee floor, driven by marketplace
 
 const $ = id => document.getElementById(id);
 const money = n => (n<0?"-":"")+CUR + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -324,7 +326,7 @@ function buildCats(){
 const MKT_KEY="marginmaster.market";
 function applyMarket(){
   const m=MARKETS[marketSel.value]||MARKETS.US;
-  CUR=m.cur;
+  CUR=m.cur; MIN_REF=m.min;
   document.querySelectorAll(".cur").forEach(el=>el.textContent=CUR);
   buildCats();
   try{localStorage.setItem(MKT_KEY,marketSel.value);}catch(e){}
@@ -342,7 +344,9 @@ function readState(){ const s={}; FIELDS.forEach(f=>s[f]=num(f)); return s; }
 
 // Pure profit model — reused by the calculator and the saved-products table.
 function compute(s){
-  const referral=s.price*s.refpct/100, fees=s.fba+s.inbound, costs=s.cost+s.other;
+  // Referral fee = percentage of price, but never less than the per-item minimum (e.g. $0.30 US).
+  const referral=s.price>0 ? Math.max(s.price*s.refpct/100, MIN_REF) : 0;
+  const fees=s.fba+s.inbound, costs=s.cost+s.other;
   const net=s.price-referral-fees-costs, invest=s.cost+s.inbound+s.other;
   return {
     referral, fees, costs, net, invest,
@@ -699,6 +703,7 @@ $("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
 
 try{const mk=localStorage.getItem(MKT_KEY); if(mk&&MARKETS[mk]) marketSel.value=mk;}catch(e){}
 CUR=(MARKETS[marketSel.value]||MARKETS.US).cur;
+MIN_REF=(MARKETS[marketSel.value]||MARKETS.US).min;
 document.querySelectorAll(".cur").forEach(el=>el.textContent=CUR);
 buildCats();
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
