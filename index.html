@@ -117,6 +117,7 @@
   .insights .ins{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.45}
   .insights .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:5px}
   .ins.good .dot{background:var(--good)} .ins.warn .dot{background:var(--accent)} .ins.bad .dot{background:var(--bad)}
+  .info{cursor:help;margin-left:4px;color:var(--muted);font-size:11px;vertical-align:super;line-height:1}
   /* print sourcing sheet */
   #printsheet{display:none}
   @media print{
@@ -1139,6 +1140,26 @@ document.querySelectorAll(".row").forEach(row=>{
     ctrl.setAttribute("aria-label", c.textContent.trim());
   }
 });
+// Glossary tooltips: append a hoverable ⓘ (native title) to matching labels/stat keys
+(function(){
+  const GLOSS={
+    "Margin":"Net profit as a % of the revenue you keep.",
+    "ROI":"Net profit as a % of the cash you tie up per unit (product + inbound + other).",
+    "Breakeven":"Sale price at which net profit is exactly zero.",
+    "Breakeven ACOS":"Highest ad-cost-to-sales ratio before an ad-driven sale loses money.",
+    "Max ad / unit":"Most you can spend on advertising per unit before it stops being profitable.",
+    "Turns / year":"How many times you sell through and repurchase inventory per year.",
+    "Annualized ROI":"Per-unit ROI × inventory turns per year — how hard your cash works.",
+    "Return on order":"Profit from the order as a % of its total cash outlay.",
+    "Referral fee %":"Amazon's commission on the sale price; varies by category.",
+    "Break-even units/mo":"Units you must sell each month to cover your fixed monthly costs.",
+  };
+  const add=(el,def)=>{ if(el.querySelector(".info")) return; const i=document.createElement("span");
+    i.className="info"; i.textContent="ⓘ"; i.title=def; i.setAttribute("aria-label",def); el.appendChild(i); };
+  document.querySelectorAll(".stat .k").forEach(k=>{ const d=GLOSS[k.textContent.trim()]; if(d) add(k,d); });
+  document.querySelectorAll(".row label").forEach(l=>{ const c=l.cloneNode(true); c.querySelectorAll(".hint,.info").forEach(x=>x.remove());
+    const d=GLOSS[c.textContent.trim()]; if(d) add(l,d); });
+})();
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle").value=cy;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
