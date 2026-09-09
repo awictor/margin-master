@@ -52,7 +52,7 @@ const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
-  encodeBundleArr, decodeBundleStr, insights, poPlan,
+  encodeBundleArr, decodeBundleStr, insights, poPlan, heat,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -148,6 +148,14 @@ check('poPlan: outlay, profit, ROI, sell-through months', () => {
   assert.ok(Math.abs(p.profit - 6070) < 1, 'profit ' + p.profit);
   assert.ok(Math.abs(p.roi - 141.16) < 0.5, 'roi ' + p.roi);
   assert.ok(Math.abs(p.months - 1.667) < 0.01, 'months ' + p.months);
+});
+
+check('heat: red at/below 0, green at/above 35%, clamped', () => {
+  assert.equal(t.heat(-5), 'hsla(0,72%,50%,0.16)');
+  assert.equal(t.heat(0), 'hsla(0,72%,50%,0.16)');
+  assert.equal(t.heat(35), 'hsla(130,72%,50%,0.16)');
+  assert.equal(t.heat(100), 'hsla(130,72%,50%,0.16)'); // clamped
+  assert.equal(t.heat(17.5), 'hsla(65,72%,50%,0.16)'); // midpoint
 });
 
 console.log(`\n${n} checks passed.`);

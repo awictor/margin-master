@@ -779,6 +779,9 @@ const COLS=[
 ];
 let sort={key:"margin",dir:-1}; // -1 desc, 1 asc
 
+// Heat background for a margin %: red (<=0) -> amber -> green (>=35%). Subtle, theme-safe.
+function heat(m){ const c=Math.max(0,Math.min(35,m))/35; const hue=c*130; return `hsla(${hue.toFixed(0)},72%,50%,0.16)`; }
+
 function render(){
   const arr=load(); $("count").textContent=arr.length;
   const host=$("tblhost");
@@ -801,7 +804,7 @@ function render(){
       <td>${best?'⭐ ':''}${esc(p.name)}</td>
       <td>${money(p.state.price)}</td>
       <td class="${cls(r.net)}">${money(r.net)}</td>
-      <td class="${cls(r.margin)}">${r.margin.toFixed(1)}%</td>
+      <td class="${cls(r.margin)}" style="background:${heat(r.margin)}">${r.margin.toFixed(1)}%</td>
       <td class="${cls(r.roi)}">${r.roi.toFixed(0)}%</td>
       <td class="${cls(r.mprofit)}">${money0(r.mprofit)}</td>
       <td><button class="mini" title="Load into calculator" data-load="${p.id}">↺</button><button class="mini" title="Delete" data-del="${p.id}">✕</button></td>
