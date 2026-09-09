@@ -9,12 +9,25 @@
   :root{
     --bg:#F5F3EF; --ink:#232F3E; --accent:#FF6100; --accent-d:#e05600;
     --card:#ffffff; --line:#e7e2d9; --muted:#6b7280; --good:#0f9d58; --bad:#d93025;
+    --field:#ffffff;
     --shadow:0 1px 2px rgba(35,47,62,.06),0 8px 24px rgba(35,47,62,.08);
   }
+  [data-theme="dark"]{
+    --bg:#161d28; --ink:#eef1f5; --accent:#FF7A26; --accent-d:#ff933f;
+    --card:#1f2836; --line:#33404f; --muted:#94a1b2; --good:#34c884; --bad:#f0685c;
+    --field:#141b25;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+  html{transition:background .2s}
+  html[data-theme="dark"] body{background:var(--bg)}
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
-  header{padding:28px 20px 8px;text-align:center}
+  header{padding:28px 20px 8px;text-align:center;position:relative}
+  #themeBtn{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:17px;cursor:pointer;
+    box-shadow:var(--shadow)}
+  #themeBtn:hover{border-color:var(--accent)}
   header h1{margin:0;font-size:26px;letter-spacing:-.02em}
   header h1 .m{color:var(--accent)}
   header p{margin:6px 0 0;color:var(--muted);font-size:14px}
@@ -30,7 +43,7 @@
   .ig{position:relative;width:130px}
   .ig .pre{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
   input,select{width:100%;padding:9px 10px 9px 22px;border:1px solid var(--line);border-radius:9px;
-    font-size:14px;text-align:right;background:#fff;color:var(--ink)}
+    font-size:14px;text-align:right;background:var(--field);color:var(--ink)}
   select{padding-left:10px;text-align:left}
   input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,97,0,.12)}
   .result h2{color:var(--accent)}
@@ -93,9 +106,16 @@
     .ps-foot{margin-top:18px;font-size:10px;color:var(--muted);border-top:1px solid #eee;padding-top:8px}
   }
 </style>
+<script>
+  // Apply saved/system theme before first paint to avoid a flash.
+  (function(){try{var t=localStorage.getItem("marginmaster.theme")||
+    ((window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches)?"dark":"light");
+    document.documentElement.setAttribute("data-theme",t);}catch(e){}})();
+</script>
 </head>
 <body>
 <header>
+  <button id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
   <h1><span class="m">Margin</span>Master <span class="badge">FBA</span></h1>
   <p>Your true Amazon net profit in real time. Runs 100% in your browser — nothing leaves your device.</p>
 </header>
@@ -543,6 +563,17 @@ function loadFromHash(){
   return true;
 }
 $("shareBtn").onclick=shareLink;
+
+/* ---- Dark mode toggle ---- */
+const THEME_KEY="marginmaster.theme";
+function syncThemeIcon(){ $("themeBtn").textContent = document.documentElement.getAttribute("data-theme")==="dark"?"☀️":"🌙"; }
+$("themeBtn").onclick=()=>{
+  const next=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",next);
+  try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+  syncThemeIcon();
+};
+syncThemeIcon();
 
 /* ---- Print / PDF sourcing sheet ---- */
 function fillPrint(){
