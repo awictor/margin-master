@@ -138,6 +138,7 @@
   <section class="card">
     <h2>Your numbers</h2>
     <div class="row"><label>Marketplace<span class="hint">sets currency + referral presets</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="market"></select></div></div>
+    <div class="row" id="vatRow" style="display:none"><label>Price includes VAT<span class="hint">VAT is deducted from revenue before profit</span></label><div style="display:flex;gap:8px;align-items:center;justify-content:flex-end"><input type="checkbox" id="vatOn" style="width:auto;margin:0"><div class="ig" style="width:82px"><span class="pre">%</span><input id="vatRate" type="number" step="0.5" value="20"></div></div></div>
     <div class="row"><label>Sale price</label><div class="ig"><span class="pre cur">$</span><input id="price" type="number" step="0.01" value="29.99"></div></div>
     <div class="row"><label>Product cost (landed / unit)<span class="hint">what you pay incl. inbound</span></label><div class="ig"><span class="pre cur">$</span><input id="cost" type="number" step="0.01" value="7.50"></div></div>
     <div class="row"><label>Category<span class="hint">sets referral fee %</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="cat"></select></div></div>
@@ -157,7 +158,8 @@
       <div class="stat"><div id="be" class="v">$0</div><div class="k">Breakeven</div></div>
     </div>
     <div class="bd">
-      <div class="li"><span>Revenue</span><span id="b_rev">$0</span></div>
+      <div class="li"><span id="lbl_rev">Revenue</span><span id="b_rev">$0</span></div>
+      <div class="li" id="li_vat" style="display:none"><span>VAT collected (remitted)</span><span id="b_vat">-$0</span></div>
       <div class="li"><span>Referral fee</span><span id="b_ref">-$0</span></div>
       <div class="li"><span>FBA + inbound</span><span id="b_fba">-$0</span></div>
       <div class="li"><span>Product + other cost</span><span id="b_cost">-$0</span></div>
@@ -318,13 +320,15 @@ const CA_CATS = [
   ["Pet Products",15],["Books",15],["Baby",15],["Tools & Home Improvement",15],
 ];
 const MARKETS = {
-  US:{label:"United States (USD $)", cur:"$",  cats:US_CATS, min:0.30},
-  CA:{label:"Canada (CAD C$)",       cur:"C$", cats:CA_CATS, min:0.30},
-  UK:{label:"United Kingdom (GBP £)",cur:"£",  cats:EU_CATS, min:0.25},
-  DE:{label:"Europe (EUR €)",        cur:"€",  cats:EU_CATS, min:0.30},
+  US:{label:"United States (USD $)", cur:"$",  cats:US_CATS, min:0.30, vat:0},
+  CA:{label:"Canada (CAD C$)",       cur:"C$", cats:CA_CATS, min:0.30, vat:0},
+  UK:{label:"United Kingdom (GBP £)",cur:"£",  cats:EU_CATS, min:0.25, vat:20},
+  DE:{label:"Europe (EUR €)",        cur:"€",  cats:EU_CATS, min:0.30, vat:20},
 };
-let CUR = "$";      // active currency symbol, driven by marketplace
-let MIN_REF = 0.30; // per-item minimum referral fee floor, driven by marketplace
+let CUR = "$";       // active currency symbol, driven by marketplace
+let MIN_REF = 0.30;  // per-item minimum referral fee floor, driven by marketplace
+let VAT_ON = false;  // treat sale price as VAT-inclusive (UK/EU)
+let VAT_RATE = 0;    // VAT % when VAT_ON
 
 const $ = id => document.getElementById(id);
 const money = n => (n<0?"-":"")+CUR + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -339,10 +343,18 @@ function buildCats(){
   m.cats.forEach(([name,pct])=>{const o=document.createElement("option");o.value=pct;o.textContent=name;catSel.appendChild(o);});
 }
 const MKT_KEY="marginmaster.market";
+function syncVAT(){
+  const m=MARKETS[marketSel.value]||MARKETS.US;
+  VAT_ON = m.vat>0 && $("vatOn").checked;
+  VAT_RATE = VAT_ON ? num("vatRate") : 0;
+}
 function applyMarket(){
   const m=MARKETS[marketSel.value]||MARKETS.US;
   CUR=m.cur; MIN_REF=m.min;
   document.querySelectorAll(".cur").forEach(el=>el.textContent=CUR);
+  $("vatRow").style.display = m.vat>0 ? "flex" : "none";
+  if(m.vat>0 && !$("vatRate").value) $("vatRate").value=m.vat;
+  syncVAT();
   buildCats();
   try{localStorage.setItem(MKT_KEY,marketSel.value);}catch(e){}
   if(typeof calc==="function") calc();
@@ -350,6 +362,8 @@ function applyMarket(){
 }
 catSel.addEventListener("change",()=>{ $("refpct").value = catSel.value; calc(); });
 marketSel.addEventListener("change",applyMarket);
+$("vatOn").addEventListener("change",()=>{ syncVAT(); calc(); render(); });
+$("vatRate").addEventListener("input",()=>{ syncVAT(); calc(); render(); });
 buildCats();
 
 function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
@@ -359,19 +373,23 @@ function readState(){ const s={}; FIELDS.forEach(f=>s[f]=num(f)); return s; }
 
 // Pure profit model — reused by the calculator and the saved-products table.
 function compute(s){
-  // Referral fee = percentage of price, but never less than the per-item minimum (e.g. $0.30 US).
-  const referral=s.price>0 ? Math.max(s.price*s.refpct/100, MIN_REF) : 0;
+  const gross=s.price;                                   // buyer-facing price (VAT-inclusive when VAT_ON)
+  const rev = VAT_ON ? gross/(1+VAT_RATE/100) : gross;   // revenue you keep (ex-VAT)
+  const vat = gross - rev;                               // VAT collected, remitted — not profit
+  // Referral fee = percentage of the gross price, never less than the per-item minimum (e.g. $0.30 US).
+  const referral = gross>0 ? Math.max(gross*s.refpct/100, MIN_REF) : 0;
   const fees=s.fba+s.inbound, costs=s.cost+s.other;
-  const net=s.price-referral-fees-costs, invest=s.cost+s.inbound+s.other;
+  const net = rev - referral - fees - costs, invest=s.cost+s.inbound+s.other;
+  const denom = (VAT_ON ? 1/(1+VAT_RATE/100) : 1) - s.refpct/100;
   return {
-    referral, fees, costs, net, invest,
-    margin: s.price>0 ? net/s.price*100 : 0,
+    referral, fees, costs, net, invest, gross, rev, vat,
+    margin: rev>0 ? net/rev*100 : 0,
     roi: invest>0 ? net/invest*100 : 0,
-    be: (1-s.refpct/100)!==0 ? (fees+costs)/(1-s.refpct/100) : 0,
-    mprofit: net*s.units, mrev: s.price*s.units,
+    be: denom!==0 ? (fees+costs)/denom : 0,
+    mprofit: net*s.units, mrev: rev*s.units,
     // Advertising headroom: the most you can spend per ad-driven unit before it loses money.
     maxAd: Math.max(0, net),
-    acosBE: s.price>0 ? Math.max(0, net)/s.price*100 : 0
+    acosBE: gross>0 ? Math.max(0, net)/gross*100 : 0
   };
 }
 
@@ -383,7 +401,10 @@ function calc(){
   $("margin").textContent=r.margin.toFixed(1)+"%";
   $("roi").textContent=r.roi.toFixed(0)+"%";
   $("be").textContent=money(r.be);
-  $("b_rev").textContent=money(s.price);
+  $("b_rev").textContent=money(r.rev);
+  $("lbl_rev").textContent = VAT_ON ? "Revenue (ex-VAT)" : "Revenue";
+  $("li_vat").style.display = VAT_ON ? "flex" : "none";
+  $("b_vat").textContent = "-"+money(r.vat);
   $("b_ref").textContent="-"+money(r.referral);
   $("b_fba").textContent="-"+money(r.fees);
   $("b_cost").textContent="-"+money(r.costs);
@@ -695,6 +716,8 @@ function fillPrint(){
     row("Units / month",s.units.toLocaleString());
   $("ps-results").innerHTML =
     `<tr class="hd"><td>Result</td><td>Per unit</td></tr>`+
+    row(VAT_ON?"Revenue (ex-VAT)":"Revenue",money(r.rev))+
+    (VAT_ON?row("VAT collected (remitted)","-"+money(r.vat)):"")+
     row("Referral fee","-"+money(r.referral))+
     row("FBA + inbound","-"+money(r.fees))+
     row("Product + other cost","-"+money(r.costs))+
@@ -718,10 +741,7 @@ $("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
   const rd=new FileReader(); rd.onload=()=>{ importCSV(rd.result); e.target.value=""; }; rd.readAsText(f); };
 
 try{const mk=localStorage.getItem(MKT_KEY); if(mk&&MARKETS[mk]) marketSel.value=mk;}catch(e){}
-CUR=(MARKETS[marketSel.value]||MARKETS.US).cur;
-MIN_REF=(MARKETS[marketSel.value]||MARKETS.US).min;
-document.querySelectorAll(".cur").forEach(el=>el.textContent=CUR);
-buildCats();
+applyMarket();
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 calc(); render();
 </script>
