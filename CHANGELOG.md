@@ -2,6 +2,21 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 1.3.0
+- Quick FBA fee presets — pick a typical item class (small/large standard weight bands, oversize) to drop a fulfillment fee in without dimensions.
+
+## 1.2.1
+- PDF sourcing sheet now includes inventory-velocity rows (turns/year, annualized ROI, profit/day) when a cash cycle is set.
+
+## 1.2.0
+- Keyboard shortcuts: `/` focus price, `s` save product, `d` toggle dark mode.
+
+## 1.1.1
+- "↺ Reset inputs" button — restore inputs to defaults while keeping saved products and marketplace.
+
+## 1.1.0
+- Added India (INR ₹, 18% GST) and UAE (AED, 5% VAT) marketplaces — now 9 markets.
+
 ## 1.0.0 — first stable release
 
 MarginMaster is a complete, offline-first Amazon FBA profitability tool in one file. Highlights consolidated from the 0.x line:
