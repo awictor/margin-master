@@ -2,6 +2,12 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 2.2.0
+- Budget order sizing — enter available capital to see units affordable and profit if the order sells through.
+
+## 2.1.0
+- Restock planner — lead time + safety stock + velocity → reorder point, days of cover, and a reorder-now signal.
+
 ## 2.0.0
 - **Product score** — a composite 0–100 quality score (margin, ROI, ad headroom, discount room) with a Strong/Solid/Fair/Weak verdict, shown under the net-profit headline.
 - **Score column** in the compare table — sortable and heat-shaded, so a whole research list ranks by overall quality, not just one metric.

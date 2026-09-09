@@ -2,7 +2,7 @@
 
 **The true-profit calculator for Amazon FBA sellers.** Type your numbers, see your real net profit, margin, ROI, and breakeven price instantly. Runs 100% in the browser — no signup, no backend, works offline.
 
-![version](https://img.shields.io/badge/version-2.0.0-FF6100) ![status](https://img.shields.io/badge/status-live-FF6100) ![type](https://img.shields.io/badge/stack-single--file-232F3E) [![CI](https://github.com/awictor/margin-master/actions/workflows/ci.yml/badge.svg)](https://github.com/awictor/margin-master/actions/workflows/ci.yml)
+![version](https://img.shields.io/badge/version-2.2.0-FF6100) ![status](https://img.shields.io/badge/status-live-FF6100) ![type](https://img.shields.io/badge/stack-single--file-232F3E) [![CI](https://github.com/awictor/margin-master/actions/workflows/ci.yml/badge.svg)](https://github.com/awictor/margin-master/actions/workflows/ci.yml)
 
 ## Why
 
