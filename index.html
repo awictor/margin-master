@@ -308,6 +308,7 @@
       <div class="toolbtns">
         <button id="importBtn" class="btn ghost">Import CSV</button>
         <button id="exportBtn" class="btn ghost">Export CSV</button>
+        <button id="shareListBtn" class="btn ghost" title="Copy a link that reopens this whole compare list">🔗 Share list</button>
         <button id="clearBtn" class="btn ghost">Clear all</button>
         <input id="csvfile" type="file" accept=".csv,text/csv" hidden>
       </div>
@@ -948,6 +949,43 @@ function fillPrintChart(){
 }
 $("printBtn").onclick=()=>{ calc(); fillPrint(); fillPrintChart(); window.print(); };
 
+/* ---- Shareable compare-list bundle (#b=...) ---- */
+function encodeBundleArr(arr){
+  const raw=arr.map(p=>{
+    const name=(p.name||"").replace(/[*~|]/g,"-");
+    const vals=FIELDS.map(f=>+(+p.state[f]).toFixed(4)).join("~");
+    return name+"*"+vals;
+  }).join("|");
+  return btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function decodeBundleStr(str){
+  try{
+    const raw=decodeURIComponent(escape(atob(str.replace(/-/g,"+").replace(/_/g,"/"))));
+    const items=raw.split("|").map(seg=>{
+      const star=seg.indexOf("*"); if(star<0) return null;
+      const name=seg.slice(0,star), vals=seg.slice(star+1).split("~").map(Number);
+      if(vals.length!==FIELDS.length||vals.some(isNaN)) return null;
+      const state={}; FIELDS.forEach((f,i)=>state[f]=vals[i]);
+      return {name,state};
+    }).filter(Boolean);
+    return items.length?items:null;
+  }catch{ return null; }
+}
+function shareBundle(){
+  const arr=load(); if(!arr.length){ alert("Save some products first, then share the list."); return; }
+  const url=location.origin+location.pathname+"#b="+encodeBundleArr(arr);
+  const btn=$("shareListBtn"), done=()=>{ btn.textContent="✓ Copied"; setTimeout(()=>btn.textContent="🔗 Share list",1600); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done,()=>prompt("Copy this link:",url));
+  else prompt("Copy this link:",url);
+}
+function loadBundleFromHash(){
+  const m=(location.hash||"").match(/[#&]b=([^&]+)/); if(!m) return 0;
+  const items=decodeBundleStr(m[1]); if(!items) return 0;
+  const arr=load(); items.forEach((it,i)=>arr.push({id:Date.now()+i,name:it.name||("Shared "+(i+1)),state:it.state}));
+  store(arr); render(); return items.length;
+}
+$("shareListBtn").onclick=shareBundle;
+
 $("saveBtn").onclick=saveProduct;
 $("pname").addEventListener("keydown",e=>{ if(e.key==="Enter") saveProduct(); });
 $("clearBtn").onclick=()=>{ if(confirm("Delete all saved products?")){ store([]); render(); } };
@@ -969,6 +1007,8 @@ document.querySelectorAll(".row").forEach(row=>{
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle").value=cy;}catch(e){}
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
+const _nb=loadBundleFromHash();
+if(_nb) showShareMsg("Imported "+_nb+" shared product"+(_nb===1?"":"s")+" into your compare list below.",true);
 calc(); render();
 </script>
 </body>

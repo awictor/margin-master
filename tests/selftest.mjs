@@ -52,6 +52,7 @@ const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
+  encodeBundleArr, decodeBundleStr,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -118,6 +119,19 @@ check('annualizeRoi: per-unit ROI × turns/year', () => {
   assert.equal(t.annualizeRoi(10, 365), 10);   // one turn/year
   assert.ok(Math.abs(t.annualizeRoi(10, 30) - 121.67) < 0.1); // ~12 turns
   assert.equal(t.annualizeRoi(10, 0), 0);       // guard
+});
+
+check('bundle codec: round-trips a compare list, rejects garbage', () => {
+  const arr = [
+    { name: 'A | one', state: { price: 29.99, cost: 7.5, refpct: 15, fba: 4.75, inbound: 0.6, other: 0.5, units: 300 } },
+    { name: 'B', state: { price: 10, cost: 2, refpct: 8, fba: 3, inbound: 0.4, other: 0.3, units: 100 } },
+  ];
+  const back = t.decodeBundleStr(t.encodeBundleArr(arr));
+  assert.equal(back.length, 2);
+  assert.equal(back[0].state.price, 29.99);
+  assert.equal(back[1].state.units, 100);
+  assert.equal(back[0].name, 'A - one'); // pipe sanitized
+  assert.equal(t.decodeBundleStr('###nope'), null);
 });
 
 console.log(`\n${n} checks passed.`);
