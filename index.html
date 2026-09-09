@@ -737,7 +737,11 @@ function parseCSV(text){
 const ALIAS={product:"name",name:"name",title:"name",price:"price","sale price":"price",
   cost:"cost","product cost":"cost","referral%":"refpct",referral:"refpct","referral fee %":"refpct",
   fba:"fba","fba fee":"fba",inbound:"inbound","ship to amazon":"inbound",other:"other","other cost":"other",
-  units:"units","units/month":"units","units / month":"units"};
+  units:"units","units/month":"units","units / month":"units",
+  // dimensions/weight -> auto-estimate the FBA fee when no fba column is supplied
+  length:"l",l:"l","length (in)":"l",width:"w",w:"w","width (in)":"w",
+  height:"h",h:"h","height (in)":"h",
+  weight:"lb","weight (lb)":"lb",lb:"lb","weight (oz)":"lboz",oz:"lboz"};
 
 function importCSV(text){
   const rows=parseCSV(text).filter(r=>r.some(c=>c.trim()!==""));
@@ -746,11 +750,19 @@ function importCSV(text){
   if(!hdr.includes("price")){ alert("Couldn't find a Price column. Expected headers like: Product, Price, Cost, Referral%, FBA, Inbound, Other, Units."); return; }
   const arr=load(); let added=0;
   const defaults={price:0,cost:0,refpct:15,fba:0,inbound:0,other:0,units:0};
+  const hasFba=hdr.includes("fba");
+  const DIM_KEYS=["l","w","h","lb","lboz"];
   for(let i=1;i<rows.length;i++){
-    const cells=rows[i]; const state={...defaults}; let name="";
+    const cells=rows[i]; const state={...defaults}; const dims={}; let name="";
     hdr.forEach((field,j)=>{ if(!field) return; const raw=(cells[j]||"").trim();
-      if(field==="name") name=raw;
-      else { const v=parseFloat(raw.replace(/[$,%\s]/g,"")); if(!isNaN(v)) state[field]=v; } });
+      if(field==="name"){ name=raw; return; }
+      const v=parseFloat(raw.replace(/[$,%\s]/g,"")); if(isNaN(v)) return;
+      if(DIM_KEYS.indexOf(field)>=0) dims[field]=v; else state[field]=v; });
+    // auto-estimate FBA fee from dimensions when the CSV has no fba column
+    if(!hasFba && dims.l>0 && dims.w>0 && dims.h>0){
+      const lb = dims.lb!=null ? dims.lb : (dims.lboz!=null ? dims.lboz/16 : 0);
+      if(lb>0){ const est=estimateFBA(dims.l,dims.w,dims.h,lb); if(est.fee!=null&&isFinite(est.fee)) state.fba=+est.fee.toFixed(2); }
+    }
     arr.push({id:Date.now()+i, name:name||("Imported "+(added+1)), state});
     added++;
   }
