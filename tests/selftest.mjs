@@ -53,7 +53,7 @@ const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
-  encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals,
+  encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -178,6 +178,15 @@ check('portfolioTotals: sums monthly profit/revenue/capital', () => {
   assert.equal(tt.count, 2);
   assert.ok(Math.abs(tt.profit - (3642 + 1214)) < 2, 'profit ' + tt.profit);
   assert.ok(Math.abs(tt.capital - (2580 + 860)) < 1, 'capital ' + tt.capital);
+});
+
+check('matchCheck: profitable above breakeven, loss below', () => {
+  const ok = t.matchCheck(base, 24.99);
+  assert.equal(ok.ok, true);
+  assert.ok(ok.net > 0);
+  const bad = t.matchCheck(base, 12); // below ~15.71 breakeven
+  assert.equal(bad.ok, false);
+  assert.ok(bad.net < 0);
 });
 
 console.log(`\n${n} checks passed.`);

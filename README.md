@@ -22,6 +22,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Portfolio summary** — running totals of monthly profit, revenue, and capital-in-stock across every saved product
 - ✅ **Bulk CSV import + ranking** — drop a supplier/research CSV, auto-map columns, rank by any metric with sortable headers; if the file has Length/Width/Height/Weight columns and no FBA fee, it estimates the fee per row automatically
 - ✅ **Target-price solver** — solve the exact sale price to hit a target margin %, ROI %, or net $/unit, then one-click apply it
+- ✅ **Competitor price check** — enter a rival's price to see your net, margin, and whether matching it still profits
 - ✅ **FBA fee estimator** — dimensions + weight → US size tier → estimated fulfillment fee (dimensional-weight aware), one-click apply; plus quick-pick presets for common item classes when you don't know the dimensions
 - ✅ **Shareable links** — copy a link that reopens the exact numbers *and* marketplace, VAT, and fixed-cost context (URL hash, nothing sent to a server; older links stay valid)
 - ✅ **PDF sourcing sheet** — one-click clean, printable one-pager with a sourcing verdict and the profit-vs-price chart (print → Save as PDF)
