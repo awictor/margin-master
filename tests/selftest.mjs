@@ -52,7 +52,7 @@ const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
-  encodeBundleArr, decodeBundleStr, insights, poPlan, heat,
+  encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -156,6 +156,14 @@ check('heat: red at/below 0, green at/above 35%, clamped', () => {
   assert.equal(t.heat(35), 'hsla(130,72%,50%,0.16)');
   assert.equal(t.heat(100), 'hsla(130,72%,50%,0.16)'); // clamped
   assert.equal(t.heat(17.5), 'hsla(65,72%,50%,0.16)'); // midpoint
+});
+
+check('goalPlan: units & sales to hit a monthly profit target', () => {
+  const g = t.goalPlan(base, 5000); // net 12.14 -> ceil(5000/12.14) = 412 units
+  assert.equal(g.units, 412);
+  assert.ok(Math.abs(g.revenue - 412 * 29.99) < 0.5);
+  const loss = t.goalPlan({ ...base, price: 10, cost: 8, fba: 4, inbound: 0.5, other: 0.5 }, 5000);
+  assert.equal(loss.units, Infinity); // unprofitable -> unreachable
 });
 
 console.log(`\n${n} checks passed.`);

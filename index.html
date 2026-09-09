@@ -301,6 +301,17 @@
           <div class="stat"><div id="poMonths" class="v">—</div><div class="k">Sell-through time</div></div>
         </div>
       </div>
+      <div class="sline" style="margin-top:16px">
+        <span>To earn</span>
+        <div class="ig" style="width:120px"><span class="pre cur">$</span><input id="goalProfit" type="number" step="50" value="0"></div>
+        <span>net profit / month you need:</span>
+      </div>
+      <div class="solveout" id="goalRow" style="display:none">
+        <div class="solvestats">
+          <div class="stat"><div id="goalUnits" class="v">—</div><div class="k">Units / month</div></div>
+          <div class="stat"><div id="goalRevenue" class="v">—</div><div class="k">Sales / month</div></div>
+        </div>
+      </div>
     </div>
   </section>
 </div>
@@ -468,6 +479,13 @@ function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
 
 // Annualized cash-on-cash ROI: per-unit ROI earned once per inventory turn (365/days turns per year).
 function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
+
+// Units/month (and sales/month) required to hit a target monthly net profit.
+function goalPlan(s,target){
+  const r=compute(s);
+  const units = r.net>0 ? Math.ceil(target/r.net) : Infinity;
+  return { units, revenue: isFinite(units) ? units*s.price : Infinity };
+}
 
 // Purchase-order economics for a given order quantity.
 function poPlan(s,qty){
@@ -651,8 +669,17 @@ function renderPO(s){
   } else {
     ["poOutlay","poProfit","poRoi","poMonths"].forEach(id=>{ $(id).textContent="—"; $(id).className="v"; });
   }
+  const goal=num("goalProfit");
+  try{localStorage.setItem("marginmaster.goal",goal);}catch(e){}
+  if(goal>0){
+    $("goalRow").style.display="flex";
+    const g=goalPlan(s,goal);
+    $("goalUnits").textContent = isFinite(g.units) ? g.units.toLocaleString() : "never";
+    $("goalRevenue").textContent = isFinite(g.revenue) ? money0(g.revenue) : "—";
+  } else { $("goalRow").style.display="none"; }
 }
 $("poQty").addEventListener("input",()=>renderPO());
+$("goalProfit").addEventListener("input",()=>renderPO());
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -1115,6 +1142,7 @@ document.querySelectorAll(".row").forEach(row=>{
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle").value=cy;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
+try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 const _nb=loadBundleFromHash();
 if(_nb) showShareMsg("Imported "+_nb+" shared product"+(_nb===1?"":"s")+" into your compare list below.",true);
