@@ -991,6 +991,7 @@ const COLS=[
   {key:"margin", label:"Margin",     get:x=>x.r.margin},
   {key:"roi",    label:"ROI",        get:x=>x.r.roi},
   {key:"mprofit",label:"Mo. profit", get:x=>x.r.mprofit},
+  {key:"score",  label:"Score",      get:x=>x.sc},
 ];
 let sort={key:"margin",dir:-1}; // -1 desc, 1 asc
 
@@ -1010,7 +1011,7 @@ function render(){
       `<div class="stat"><div class="v">${money0(tt.capital)}</div><div class="k">Capital in stock</div></div>`;
   } else { pf.style.display="none"; pf.innerHTML=""; }
   if(!arr.length){ host.innerHTML='<div class="empty">No saved products yet. Save products above or <b>Import CSV</b> to rank them by margin. Best margin is highlighted.</div>'; return; }
-  const rows=arr.map(p=>({p,r:compute(p.state)}));
+  const rows=arr.map(p=>({p,r:compute(p.state),sc:scoreProduct(p.state).score}));
   const bestMargin=Math.max(...rows.map(x=>x.r.margin));
   const col=COLS.find(c=>c.key===sort.key)||COLS[3];
   rows.sort((a,b)=>{ const av=col.get(a),bv=col.get(b);
@@ -1021,7 +1022,7 @@ function render(){
   let html='<table><thead><tr><th>#</th>';
   COLS.forEach(c=>{ html+=`<th data-sort="${c.key}" role="button" tabindex="0" title="Sort by ${c.label}" aria-label="Sort by ${c.label}" style="cursor:pointer">${c.label}${arrow(c.key)}</th>`; });
   html+='<th></th></tr></thead><tbody>';
-  rows.forEach(({p,r},i)=>{
+  rows.forEach(({p,r,sc},i)=>{
     const best=r.margin===bestMargin && rows.length>1;
     html+=`<tr class="${best?'best':''}">
       <td>${i+1}</td>
@@ -1031,6 +1032,7 @@ function render(){
       <td class="${cls(r.margin)}" style="background:${heat(r.margin)}">${r.margin.toFixed(1)}%</td>
       <td class="${cls(r.roi)}">${r.roi.toFixed(0)}%</td>
       <td class="${cls(r.mprofit)}">${money0(r.mprofit)}</td>
+      <td style="background:${heat(sc*0.35)}">${sc}</td>
       <td><button class="mini" title="Load into calculator" data-load="${p.id}">↺</button><button class="mini" title="Edit note" data-note="${p.id}">📝</button><button class="mini" title="Duplicate" data-dup="${p.id}">⧉</button><button class="mini" title="Delete" data-del="${p.id}">✕</button></td>
     </tr>`;
   });
