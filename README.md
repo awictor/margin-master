@@ -13,6 +13,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ Full FBA cost model: referral %, fulfillment fee, inbound, product + other cost
 - ✅ Category presets that auto-fill the US referral fee %
 - ✅ Live **net profit / unit, margin %, ROI %, breakeven price**
+- ✅ **Product score** — a 0–100 quality score (margin, ROI, discount room, ad headroom) with a Strong/Solid/Fair/Weak verdict
 - ✅ **Plain-English insights** — flags high FBA/referral fees, thin margins, min-fee floors, and low ad headroom (and calls out strong candidates)
 - ✅ Monthly profit + revenue projection
 - ✅ Cost breakdown waterfall

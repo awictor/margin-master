@@ -69,6 +69,7 @@
   .result h2{color:var(--accent)}
   .big{font-size:40px;font-weight:700;letter-spacing:-.02em;margin:2px 0}
   .big.good{color:var(--good)} .big.bad{color:var(--bad)}
+  .scoreline{font-size:13px;margin-top:2px;color:var(--muted)}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
   .stat{background:var(--bg);border-radius:10px;padding:12px;text-align:center}
   .stat .v{font-size:20px;font-weight:600} .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
@@ -200,6 +201,7 @@
   <section class="card result">
     <h2>Net profit / unit</h2>
     <div id="profit" class="big" role="status" aria-live="polite" aria-atomic="true" aria-label="Net profit per unit">$0.00</div>
+    <div id="scoreLine" class="scoreline"></div>
     <div class="grid3">
       <div class="stat"><div id="margin" class="v">0%</div><div class="k">Margin</div></div>
       <div class="stat"><div id="roi" class="v">0%</div><div class="k">ROI</div></div>
@@ -547,6 +549,18 @@ function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 // sale (net) and incurring a per-return loss ≈ product cost + FBA fee (unit sunk, fee unrecovered).
 function returnsAdjustedNet(net,cost,fba,ratePct){ const r=Math.max(0,ratePct)/100; return (1-r)*net - r*(cost+fba); }
 
+// Composite 0–100 product-quality score from margin, ROI, discount room, and ad headroom.
+function scoreProduct(s){
+  const r=compute(s);
+  if(r.net<0) return {score:0,label:"Unviable"};
+  const clamp=x=>Math.max(0,Math.min(100,x));
+  const mS=clamp(r.margin/40*100), rS=clamp(r.roi/150*100),
+        dS=clamp(r.discountRoom/40*100), aS=clamp(r.acosBE/40*100);
+  const score=Math.round(mS*0.35+rS*0.30+dS*0.15+aS*0.20);
+  const label = score>=75?"Strong" : score>=50?"Solid" : score>=30?"Fair" : "Weak";
+  return {score,label};
+}
+
 // Plain-text results summary for pasting into chat/notes (uses active currency via money()).
 function summaryText(s){
   const r=compute(s);
@@ -645,6 +659,10 @@ function calc(){
   $("maxAd").textContent=money(r.maxAd);
   $("acosBE").textContent=r.acosBE.toFixed(1)+"%";
   $("discRoom").textContent=r.discountRoom.toFixed(0)+"%";
+
+  const sc=scoreProduct(s);
+  const scCol = sc.label==="Strong"?"var(--good)" : (sc.label==="Weak"||sc.label==="Unviable")?"var(--bad)":"var(--accent-d)";
+  $("scoreLine").innerHTML=`Product score <b style="color:${scCol}">${sc.score}</b>/100 · ${sc.label}`;
 
   const rr=num("returns");
   try{localStorage.setItem("marginmaster.returns",rr);}catch(e){}

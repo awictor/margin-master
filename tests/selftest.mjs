@@ -54,7 +54,7 @@ const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
-  returnsAdjustedNet, summaryText,
+  returnsAdjustedNet, summaryText, scoreProduct,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -203,6 +203,15 @@ check('summaryText: three lines with key metrics', () => {
   assert.match(txt, /Net\/unit \$12\.14/);
   assert.match(txt, /Margin 40\.5%/);
   assert.match(txt, /Monthly \(300 u\)/);
+});
+
+check('scoreProduct: 0–100 in range, loss = Unviable, strong base', () => {
+  const g = t.scoreProduct(base);
+  assert.ok(g.score >= 0 && g.score <= 100);
+  assert.ok(['Strong', 'Solid'].includes(g.label), 'base label ' + g.label);
+  const loss = t.scoreProduct({ ...base, price: 10, cost: 8, fba: 4, inbound: 0.5, other: 0.5 });
+  assert.equal(loss.score, 0);
+  assert.equal(loss.label, 'Unviable');
 });
 
 console.log(`\n${n} checks passed.`);
