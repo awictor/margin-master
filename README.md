@@ -21,7 +21,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Margin heatmap** — compare-table margin cells shade red→amber→green so the winners pop at a glance
 - ✅ **Bulk CSV import + ranking** — drop a supplier/research CSV, auto-map columns, rank by any metric with sortable headers; if the file has Length/Width/Height/Weight columns and no FBA fee, it estimates the fee per row automatically
 - ✅ **Target-price solver** — solve the exact sale price to hit a target margin %, ROI %, or net $/unit, then one-click apply it
-- ✅ **FBA fee estimator** — dimensions + weight → US size tier → estimated fulfillment fee (dimensional-weight aware), one-click apply
+- ✅ **FBA fee estimator** — dimensions + weight → US size tier → estimated fulfillment fee (dimensional-weight aware), one-click apply; plus quick-pick presets for common item classes when you don't know the dimensions
 - ✅ **Shareable links** — copy a link that reopens the exact numbers *and* marketplace, VAT, and fixed-cost context (URL hash, nothing sent to a server; older links stay valid)
 - ✅ **PDF sourcing sheet** — one-click clean, printable one-pager with a sourcing verdict and the profit-vs-price chart (print → Save as PDF)
 - ✅ **Dark mode** — toggle that persists and respects your system preference (no flash on load)

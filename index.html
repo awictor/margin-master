@@ -322,6 +322,11 @@
   <section class="card">
     <h2>FBA fee estimator <span class="badge">US · standard-size</span></h2>
     <div class="solver">
+      <div class="sline" style="margin-bottom:12px">
+        <span>Quick preset</span>
+        <select id="fbaPreset" style="width:240px"></select>
+        <span>— or enter dimensions below.</span>
+      </div>
       <div class="sline">
         <span>Dimensions</span>
         <div class="ig" style="width:78px"><span class="pre"></span><input id="dl" type="number" step="0.1" value="9" placeholder="L"></div>
@@ -795,6 +800,18 @@ function runFBA(){
     $("addStorage").disabled=true;
   }
 }
+// Typical US fulfillment fees by item class — a shortcut when dimensions are unknown (editable).
+const FBA_PRESETS=[
+  ["Small standard, light (≤6 oz)",3.24],
+  ["Small standard (up to 1 lb)",3.65],
+  ["Large standard (under 1 lb)",3.90],
+  ["Large standard (1–2 lb)",5.37],
+  ["Large standard (2–3 lb)",5.87],
+  ["Large bulky / oversize (approx.)",9.00],
+];
+(function(){ const sel=$("fbaPreset"); const o0=document.createElement("option"); o0.value=""; o0.textContent="— pick a typical item —"; sel.appendChild(o0);
+  FBA_PRESETS.forEach(([label,fee])=>{ const o=document.createElement("option"); o.value=fee; o.textContent=`${label} · ${money(fee)}`; sel.appendChild(o); }); })();
+$("fbaPreset").addEventListener("change",()=>{ const v=parseFloat($("fbaPreset").value); if(!isNaN(v)){ $("fba").value=v.toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } });
 ["dl","dw","dh","dwt"].forEach(id=>$(id).addEventListener("input",runFBA));
 $("wunit").addEventListener("change",runFBA);
 $("applyFee").onclick=()=>{ if(estFee!=null){ $("fba").value=estFee.toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
