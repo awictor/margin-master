@@ -189,7 +189,8 @@
     <div class="row"><label>Referral fee %<span class="hint">auto from category, editable</span></label><div class="ig"><span class="pre">%</span><input id="refpct" type="number" step="0.1" value="15"></div></div>
     <div class="row"><label>FBA fulfillment fee / unit</label><div class="ig"><span class="pre cur">$</span><input id="fba" type="number" step="0.01" value="4.75"></div></div>
     <div class="row"><label>Ship to Amazon / unit</label><div class="ig"><span class="pre cur">$</span><input id="inbound" type="number" step="0.01" value="0.60"></div></div>
-    <div class="row"><label>Other cost / unit<span class="hint">prep, storage, returns reserve</span></label><div class="ig"><span class="pre cur">$</span><input id="other" type="number" step="0.01" value="0.50"></div></div>
+    <div class="row"><label>Other cost / unit<span class="hint">prep, storage, misc</span></label><div class="ig"><span class="pre cur">$</span><input id="other" type="number" step="0.01" value="0.50"></div></div>
+    <div class="row"><label>Return rate %<span class="hint">optional — lost unit + FBA fee per return</span></label><div class="ig"><span class="pre">%</span><input id="returns" type="number" step="0.5" value="0"></div></div>
     <div class="row"><label>Units / month</label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="1" value="300"></div></div>
     <div class="row"><label>Fixed monthly costs<span class="hint">software, VA, tools — optional</span></label><div class="ig"><span class="pre cur">$</span><input id="fixed" type="number" step="1" value="0"></div></div>
     <div class="row"><label>Days to sell inventory<span class="hint">cash cycle — enables velocity metrics</span></label><div class="ig"><span class="pre">#</span><input id="cycle" type="number" step="1" value="0"></div></div>
@@ -224,6 +225,10 @@
     <div class="grid3" id="fixedRow" style="grid-template-columns:1fr 1fr;display:none">
       <div class="stat"><div id="beUnits" class="v">—</div><div class="k">Break-even units/mo</div></div>
       <div class="stat"><div id="profitAfter" class="v">$0</div><div class="k">Profit after fixed</div></div>
+    </div>
+    <div class="grid3" id="returnsRow" style="grid-template-columns:1fr 1fr;display:none">
+      <div class="stat"><div id="netReturns" class="v">—</div><div class="k">Net after returns</div></div>
+      <div class="stat"><div id="mprofitReturns" class="v">—</div><div class="k">Monthly after returns</div></div>
     </div>
     <div class="grid3" id="velRow" style="display:none">
       <div class="stat"><div id="turns" class="v">—</div><div class="k">Turns / year</div></div>
@@ -536,6 +541,10 @@ function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
 // Annualized cash-on-cash ROI: per-unit ROI earned once per inventory turn (365/days turns per year).
 function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 
+// Expected net per shipped unit given a return rate: a fraction r are returned, forgoing the
+// sale (net) and incurring a per-return loss ≈ product cost + FBA fee (unit sunk, fee unrecovered).
+function returnsAdjustedNet(net,cost,fba,ratePct){ const r=Math.max(0,ratePct)/100; return (1-r)*net - r*(cost+fba); }
+
 // Your economics if you matched a competitor's price.
 function matchCheck(s,compPrice){
   const r=compute({...s,price:compPrice});
@@ -624,6 +633,15 @@ function calc(){
   $("maxAd").textContent=money(r.maxAd);
   $("acosBE").textContent=r.acosBE.toFixed(1)+"%";
   $("discRoom").textContent=r.discountRoom.toFixed(0)+"%";
+
+  const rr=num("returns");
+  try{localStorage.setItem("marginmaster.returns",rr);}catch(e){}
+  if(rr>0){
+    $("returnsRow").style.display="grid";
+    const en=returnsAdjustedNet(r.net,s.cost,s.fba,rr);
+    const ne=$("netReturns"); ne.textContent=money(en); ne.className="v "+(en>=0?"pos":"neg");
+    const me=$("mprofitReturns"); me.textContent=money0(en*s.units); me.className="v "+(en>=0?"pos":"neg");
+  } else { $("returnsRow").style.display="none"; }
 
   const ins=insights(s);
   $("insights").innerHTML=ins.map(i=>`<div class="ins ${i.level}"><span class="dot"></span><span>${i.msg}</span></div>`).join("");
@@ -721,7 +739,7 @@ function drawChart(){
   svg.innerHTML=g.join("");
   $("chartNote").textContent="Net profit / unit as sale price sweeps "+money0(lo)+"–"+money0(hi)+". Red line = breakeven, dot = your current price.";
 }
-document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units,#fixed,#cycle").forEach(el=>el.addEventListener("input",calc));
+document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units,#fixed,#cycle,#returns").forEach(el=>el.addEventListener("input",calc));
 
 // Purchase-order planner render (uses current inputs + order qty)
 function renderPO(s){
@@ -1243,7 +1261,7 @@ $("shareListBtn").onclick=shareBundle;
 
 /* ---- Reset inputs to defaults (keeps saved products & marketplace) ---- */
 const INPUT_DEFAULTS={price:"29.99",cost:"7.50",refpct:"15",fba:"4.75",inbound:"0.60",other:"0.50",
-  units:"300",fixed:"0",cycle:"0",dl:"9",dw:"6",dh:"2",dwt:"0.8",poQty:"500",goalProfit:"0"};
+  units:"300",fixed:"0",cycle:"0",returns:"0",dl:"9",dw:"6",dh:"2",dwt:"0.8",poQty:"500",goalProfit:"0"};
 function resetAll(){
   if(!confirm("Reset all inputs to defaults? Your saved products and marketplace are kept.")) return;
   Object.entries(INPUT_DEFAULTS).forEach(([id,v])=>{ if($(id)) $(id).value=v; });
@@ -1315,6 +1333,7 @@ document.querySelectorAll(".row").forEach(row=>{
 })();
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
 try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle").value=cy;}catch(e){}
+try{const rt=localStorage.getItem("marginmaster.returns"); if(rt!=null) $("returns").value=rt;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 try{const cp=localStorage.getItem("marginmaster.comp"); if(cp!=null) $("compPrice").value=cp;}catch(e){}

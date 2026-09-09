@@ -54,6 +54,7 @@ const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
+  returnsAdjustedNet,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -187,6 +188,13 @@ check('matchCheck: profitable above breakeven, loss below', () => {
   const bad = t.matchCheck(base, 12); // below ~15.71 breakeven
   assert.equal(bad.ok, false);
   assert.ok(bad.net < 0);
+});
+
+check('returnsAdjustedNet: return rate erodes expected net', () => {
+  // net 12.14, cost 7.5, fba 4.75, 10% returns:
+  // 0.9*12.14 - 0.1*(7.5+4.75) = 10.926 - 1.225 = 9.701
+  assert.ok(Math.abs(t.returnsAdjustedNet(12.14, 7.5, 4.75, 10) - 9.701) < 0.001);
+  assert.equal(t.returnsAdjustedNet(12.14, 7.5, 4.75, 0), 12.14); // 0% = unchanged
 });
 
 console.log(`\n${n} checks passed.`);
