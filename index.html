@@ -116,8 +116,10 @@
     <div class="tbltools">
       <h2 style="margin:0">Saved products <span id="count" class="badge">0</span></h2>
       <div class="toolbtns">
+        <button id="importBtn" class="btn ghost">Import CSV</button>
         <button id="exportBtn" class="btn ghost">Export CSV</button>
         <button id="clearBtn" class="btn ghost">Clear all</button>
+        <input id="csvfile" type="file" accept=".csv,text/csv" hidden>
       </div>
     </div>
     <div id="tblhost">
@@ -204,17 +206,36 @@ function loadProduct(id){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
+// Sortable-column definitions: label + value accessor. Default sort = margin desc (ranking).
+const COLS=[
+  {key:"name",   label:"Product",    get:x=>x.p.name.toLowerCase(), text:true},
+  {key:"price",  label:"Price",      get:x=>x.p.state.price},
+  {key:"net",    label:"Net/unit",   get:x=>x.r.net},
+  {key:"margin", label:"Margin",     get:x=>x.r.margin},
+  {key:"roi",    label:"ROI",        get:x=>x.r.roi},
+  {key:"mprofit",label:"Mo. profit", get:x=>x.r.mprofit},
+];
+let sort={key:"margin",dir:-1}; // -1 desc, 1 asc
+
 function render(){
   const arr=load(); $("count").textContent=arr.length;
   const host=$("tblhost");
-  if(!arr.length){ host.innerHTML='<div class="empty">No saved products yet. Enter numbers above, name it, and hit <b>Save</b> to compare margins side by side. Best margin is highlighted.</div>'; return; }
+  if(!arr.length){ host.innerHTML='<div class="empty">No saved products yet. Save products above or <b>Import CSV</b> to rank them by margin. Best margin is highlighted.</div>'; return; }
   const rows=arr.map(p=>({p,r:compute(p.state)}));
   const bestMargin=Math.max(...rows.map(x=>x.r.margin));
-  let html='<table><thead><tr><th>Product</th><th>Price</th><th>Net/unit</th><th>Margin</th><th>ROI</th><th>Mo. profit</th><th></th></tr></thead><tbody>';
-  rows.forEach(({p,r})=>{
+  const col=COLS.find(c=>c.key===sort.key)||COLS[3];
+  rows.sort((a,b)=>{ const av=col.get(a),bv=col.get(b);
+    return (col.text ? String(av).localeCompare(String(bv)) : av-bv)*sort.dir; });
+
+  const arrow=k=> sort.key===k ? (sort.dir<0?" ▼":" ▲") : "";
+  const cls=v=>v>=0?"pos":"neg";
+  let html='<table><thead><tr><th>#</th>';
+  COLS.forEach(c=>{ html+=`<th data-sort="${c.key}" style="cursor:pointer">${c.label}${arrow(c.key)}</th>`; });
+  html+='<th></th></tr></thead><tbody>';
+  rows.forEach(({p,r},i)=>{
     const best=r.margin===bestMargin && rows.length>1;
-    const cls=v=>v>=0?"pos":"neg";
     html+=`<tr class="${best?'best':''}">
+      <td>${i+1}</td>
       <td>${best?'⭐ ':''}${esc(p.name)}</td>
       <td>${money(p.state.price)}</td>
       <td class="${cls(r.net)}">${money(r.net)}</td>
@@ -226,6 +247,11 @@ function render(){
   });
   html+='</tbody></table>';
   host.innerHTML=html;
+  host.querySelectorAll("[data-sort]").forEach(th=>th.onclick=()=>{
+    const k=th.dataset.sort;
+    if(sort.key===k) sort.dir*=-1; else sort={key:k,dir:k==="name"?1:-1};
+    render();
+  });
   host.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>loadProduct(+b.dataset.load));
   host.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delProduct(+b.dataset.del));
 }
@@ -244,10 +270,51 @@ function exportCSV(){
   a.download="marginmaster-products.csv"; a.click(); URL.revokeObjectURL(a.href);
 }
 
+// Minimal CSV parser (handles quoted fields, embedded commas & doubled quotes).
+function parseCSV(text){
+  const rows=[]; let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(f); f=""; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n')i++; if(f!==""||row.length){row.push(f);rows.push(row);} row=[];f=""; }
+    else f+=c;
+  }
+  if(f!==""||row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+// Map flexible header names -> our state fields.
+const ALIAS={product:"name",name:"name",title:"name",price:"price","sale price":"price",
+  cost:"cost","product cost":"cost","referral%":"refpct",referral:"refpct","referral fee %":"refpct",
+  fba:"fba","fba fee":"fba",inbound:"inbound","ship to amazon":"inbound",other:"other","other cost":"other",
+  units:"units","units/month":"units","units / month":"units"};
+
+function importCSV(text){
+  const rows=parseCSV(text).filter(r=>r.some(c=>c.trim()!==""));
+  if(rows.length<2){ alert("CSV needs a header row plus at least one product row."); return; }
+  const hdr=rows[0].map(h=>ALIAS[h.trim().toLowerCase()]||null);
+  if(!hdr.includes("price")){ alert("Couldn't find a Price column. Expected headers like: Product, Price, Cost, Referral%, FBA, Inbound, Other, Units."); return; }
+  const arr=load(); let added=0;
+  const defaults={price:0,cost:0,refpct:15,fba:0,inbound:0,other:0,units:0};
+  for(let i=1;i<rows.length;i++){
+    const cells=rows[i]; const state={...defaults}; let name="";
+    hdr.forEach((field,j)=>{ if(!field) return; const raw=(cells[j]||"").trim();
+      if(field==="name") name=raw;
+      else { const v=parseFloat(raw.replace(/[$,%\s]/g,"")); if(!isNaN(v)) state[field]=v; } });
+    arr.push({id:Date.now()+i, name:name||("Imported "+(added+1)), state});
+    added++;
+  }
+  store(arr); render();
+  alert("Imported "+added+" product"+(added===1?"":"s")+".");
+}
+
 $("saveBtn").onclick=saveProduct;
 $("pname").addEventListener("keydown",e=>{ if(e.key==="Enter") saveProduct(); });
 $("clearBtn").onclick=()=>{ if(confirm("Delete all saved products?")){ store([]); render(); } };
 $("exportBtn").onclick=exportCSV;
+$("importBtn").onclick=()=>$("csvfile").click();
+$("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader(); rd.onload=()=>{ importCSV(rd.result); e.target.value=""; }; rd.readAsText(f); };
 
 calc(); render();
 </script>
