@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MarginMaster — Amazon FBA Profit Calculator</title>
+<meta name="description" content="Instantly calculate your true Amazon FBA net profit, margin, ROI, and breakeven. Works offline. No signup." />
+<style>
+  :root{
+    --bg:#F5F3EF; --ink:#232F3E; --accent:#FF6100; --accent-d:#e05600;
+    --card:#ffffff; --line:#e7e2d9; --muted:#6b7280; --good:#0f9d58; --bad:#d93025;
+    --shadow:0 1px 2px rgba(35,47,62,.06),0 8px 24px rgba(35,47,62,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  header{padding:28px 20px 8px;text-align:center}
+  header h1{margin:0;font-size:26px;letter-spacing:-.02em}
+  header h1 .m{color:var(--accent)}
+  header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+  .wrap{max-width:960px;margin:0 auto;padding:20px;display:grid;
+    grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:760px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;box-shadow:var(--shadow)}
+  .card h2{margin:0 0 14px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .row{display:flex;align-items:center;justify-content:space-between;margin:10px 0;gap:12px}
+  .row label{font-size:14px;flex:1}
+  .row .hint{display:block;font-size:11px;color:var(--muted)}
+  .ig{position:relative;width:130px}
+  .ig .pre{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+  input,select{width:100%;padding:9px 10px 9px 22px;border:1px solid var(--line);border-radius:9px;
+    font-size:14px;text-align:right;background:#fff;color:var(--ink)}
+  select{padding-left:10px;text-align:left}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,97,0,.12)}
+  .result h2{color:var(--accent)}
+  .big{font-size:40px;font-weight:700;letter-spacing:-.02em;margin:2px 0}
+  .big.good{color:var(--good)} .big.bad{color:var(--bad)}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
+  .stat{background:var(--bg);border-radius:10px;padding:12px;text-align:center}
+  .stat .v{font-size:20px;font-weight:600} .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .bd{margin-top:16px;font-size:13px}
+  .bd .li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .bd .li:last-child{border-bottom:0;font-weight:700}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:24px}
+  footer a{color:var(--accent-d);text-decoration:none}
+  .badge{display:inline-block;background:rgba(255,97,0,.12);color:var(--accent-d);
+    font-size:11px;padding:3px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="m">Margin</span>Master <span class="badge">FBA</span></h1>
+  <p>Your true Amazon net profit in real time. Runs 100% in your browser — nothing leaves your device.</p>
+</header>
+
+<div class="wrap">
+  <section class="card">
+    <h2>Your numbers</h2>
+    <div class="row"><label>Sale price</label><div class="ig"><span class="pre">$</span><input id="price" type="number" step="0.01" value="29.99"></div></div>
+    <div class="row"><label>Product cost (landed / unit)<span class="hint">what you pay incl. inbound</span></label><div class="ig"><span class="pre">$</span><input id="cost" type="number" step="0.01" value="7.50"></div></div>
+    <div class="row"><label>Category<span class="hint">sets referral fee %</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="cat"></select></div></div>
+    <div class="row"><label>Referral fee %<span class="hint">auto from category, editable</span></label><div class="ig"><span class="pre">%</span><input id="refpct" type="number" step="0.1" value="15"></div></div>
+    <div class="row"><label>FBA fulfillment fee / unit</label><div class="ig"><span class="pre">$</span><input id="fba" type="number" step="0.01" value="4.75"></div></div>
+    <div class="row"><label>Ship to Amazon / unit</label><div class="ig"><span class="pre">$</span><input id="inbound" type="number" step="0.01" value="0.60"></div></div>
+    <div class="row"><label>Other cost / unit<span class="hint">prep, storage, returns reserve</span></label><div class="ig"><span class="pre">$</span><input id="other" type="number" step="0.01" value="0.50"></div></div>
+    <div class="row"><label>Units / month</label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="1" value="300"></div></div>
+  </section>
+
+  <section class="card result">
+    <h2>Net profit / unit</h2>
+    <div id="profit" class="big">$0.00</div>
+    <div class="grid3">
+      <div class="stat"><div id="margin" class="v">0%</div><div class="k">Margin</div></div>
+      <div class="stat"><div id="roi" class="v">0%</div><div class="k">ROI</div></div>
+      <div class="stat"><div id="be" class="v">$0</div><div class="k">Breakeven</div></div>
+    </div>
+    <div class="bd">
+      <div class="li"><span>Revenue</span><span id="b_rev">$0</span></div>
+      <div class="li"><span>Referral fee</span><span id="b_ref">-$0</span></div>
+      <div class="li"><span>FBA + inbound</span><span id="b_fba">-$0</span></div>
+      <div class="li"><span>Product + other cost</span><span id="b_cost">-$0</span></div>
+      <div class="li"><span>Net / unit</span><span id="b_net">$0</span></div>
+    </div>
+    <div class="grid3" style="grid-template-columns:1fr 1fr">
+      <div class="stat"><div id="mprofit" class="v">$0</div><div class="k">Monthly profit</div></div>
+      <div class="stat"><div id="mrev" class="v">$0</div><div class="k">Monthly revenue</div></div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  MarginMaster · offline-first FBA calculator · <a href="https://github.com/awictor/margin-master">source</a><br>
+  Fees are estimates — verify against your Seller Central fee preview before sourcing.
+</footer>
+
+<script>
+// Amazon US referral fee % by category (common defaults; editable).
+const CATS = [
+  ["Everything Else (default)",15],["Home & Kitchen",15],["Health & Household",15],
+  ["Beauty & Personal Care",15],["Toys & Games",15],["Sports & Outdoors",15],
+  ["Grocery & Gourmet (>$15)",15],["Grocery & Gourmet (<=$15)",8],
+  ["Electronics",8],["Cell Phone Accessories",8],["Computers",8],
+  ["Clothing & Accessories",17],["Jewelry",20],["Watches",16],
+  ["Amazon Device Accessories",45],["Furniture",15],["Pet Products",15],
+  ["Books",15],["Baby Products",15],["Tools & Home Improvement",15],
+];
+const $ = id => document.getElementById(id);
+const money = n => (n<0?"-$":"$") + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const money0 = n => (n<0?"-$":"$") + Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:0});
+
+const catSel = $("cat");
+CATS.forEach(([name,pct],i)=>{const o=document.createElement("option");o.value=pct;o.textContent=name;o.dataset.i=i;catSel.appendChild(o);});
+catSel.addEventListener("change",()=>{ $("refpct").value = catSel.value; calc(); });
+
+function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
+
+function calc(){
+  const price=num("price"), cost=num("cost"), refpct=num("refpct"),
+        fba=num("fba"), inbound=num("inbound"), other=num("other"), units=num("units");
+  const referral = price * refpct/100;
+  const fees = fba + inbound;
+  const costs = cost + other;
+  const net = price - referral - fees - costs;
+  const invest = cost + inbound + other; // cash out per unit
+  const margin = price>0 ? net/price*100 : 0;
+  const roi = invest>0 ? net/invest*100 : 0;
+  // breakeven sale price: price where net=0 given refpct
+  const be = (fees + costs) / (1 - refpct/100);
+
+  const p=$("profit");
+  p.textContent = money(net);
+  p.className = "big " + (net>=0?"good":"bad");
+  $("margin").textContent = margin.toFixed(1)+"%";
+  $("roi").textContent = roi.toFixed(0)+"%";
+  $("be").textContent = money(be);
+  $("b_rev").textContent = money(price);
+  $("b_ref").textContent = "-"+money(referral);
+  $("b_fba").textContent = "-"+money(fees);
+  $("b_cost").textContent = "-"+money(costs);
+  $("b_net").textContent = money(net);
+  $("mprofit").textContent = money0(net*units);
+  $("mrev").textContent = money0(price*units);
+}
+document.querySelectorAll("input").forEach(el=>el.addEventListener("input",calc));
+calc();
+</script>
+</body>
+</html>
