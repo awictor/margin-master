@@ -341,6 +341,28 @@
   </section>
 </div>
 
+<div class="fullwrap">
+  <section class="card">
+    <h2>Multipack helper</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>A pack of</span>
+        <div class="ig" style="width:80px"><span class="pre">#</span><input id="mpSize" type="number" step="1" value="2"></div>
+        <span>units at</span>
+        <div class="ig" style="width:110px"><span class="pre cur">$</span><input id="mpUnitCost" type="number" step="0.01" value="3.75"></div>
+        <span>each:</span>
+      </div>
+      <div class="solveout">
+        <div class="solvestats">
+          <div class="stat"><div id="mpPackCost" class="v">—</div><div class="k">Pack product cost</div></div>
+        </div>
+        <button id="mpApply" class="btn primary">Use as Product cost ↑</button>
+      </div>
+      <div id="mpInfo" class="empty"></div>
+    </div>
+  </section>
+</div>
+
 <div class="fullwrap" id="fba-sec">
   <section class="card">
     <h2>FBA fee estimator <span class="badge">US · standard-size</span></h2>
@@ -608,6 +630,7 @@ function calc(){
 
   renderPO(s);
   renderMatch(s);
+  renderMultipack(s);
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");
@@ -739,6 +762,20 @@ function renderMatch(s){
   } else { $("cmNet").textContent="—"; $("cmMargin").textContent="—"; st.textContent=""; }
 }
 $("compPrice").addEventListener("input",()=>renderMatch());
+
+// Multipack helper: pack product cost from per-single cost × pack size
+function renderMultipack(s){
+  s=s||readState(); const per=num("mpUnitCost"), size=num("mpSize");
+  try{localStorage.setItem("marginmaster.mpcost",per);localStorage.setItem("marginmaster.mpsize",size);}catch(e){}
+  if(size>0){
+    $("mpPackCost").textContent=money(per*size);
+    const r=compute(s);
+    $("mpInfo").textContent=`At the current pack price, that's ${money(r.net/size)} net per single unit (${r.margin.toFixed(1)}% pack margin).`;
+  } else { $("mpPackCost").textContent="—"; $("mpInfo").textContent=""; }
+}
+$("mpSize").addEventListener("input",()=>renderMultipack());
+$("mpUnitCost").addEventListener("input",()=>renderMultipack());
+$("mpApply").onclick=()=>{ const per=num("mpUnitCost"),size=num("mpSize"); if(size>0){ $("cost").value=(per*size).toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -1281,6 +1318,8 @@ try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle")
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 try{const cp=localStorage.getItem("marginmaster.comp"); if(cp!=null) $("compPrice").value=cp;}catch(e){}
+try{const mc=localStorage.getItem("marginmaster.mpcost"); if(mc!=null) $("mpUnitCost").value=mc;}catch(e){}
+try{const ms=localStorage.getItem("marginmaster.mpsize"); if(ms!=null) $("mpSize").value=ms;}catch(e){}
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 const _nb=loadBundleFromHash();
 if(_nb) showShareMsg("Imported "+_nb+" shared product"+(_nb===1?"":"s")+" into your compare list below.",true);
