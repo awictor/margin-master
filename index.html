@@ -32,8 +32,13 @@
     --field:#141b25;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
   }
-  html{transition:background .2s}
+  html{transition:background .2s;scroll-behavior:smooth}
   html[data-theme="dark"] body{background:var(--bg)}
+  .nav{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+  .nav .navin{max-width:960px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:8px 16px}
+  .nav a{white-space:nowrap;font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 11px;border-radius:20px;border:1px solid transparent}
+  .nav a:hover{color:var(--accent-d);border-color:var(--line);background:var(--card)}
+  .wrap,.fullwrap{scroll-margin-top:58px}
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -115,7 +120,7 @@
   #printsheet{display:none}
   @media print{
     @page{margin:14mm}
-    header,.wrap,.fullwrap,footer{display:none!important}
+    header,.nav,.tip,.wrap,.fullwrap,footer{display:none!important}
     body{background:#fff}
     #printsheet{display:block;max-width:100%;color:var(--ink);font-size:12px}
     .ps-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--accent);padding-bottom:8px}
@@ -157,7 +162,19 @@
   <button id="tipClose" class="tipx" aria-label="Dismiss tip">✕</button>
 </div>
 
-<div class="wrap">
+<nav class="nav" aria-label="Jump to section">
+  <div class="navin">
+    <a href="#calc-sec">Calculator</a>
+    <a href="#chart-sec">Chart</a>
+    <a href="#sens-sec">Sensitivity</a>
+    <a href="#solver-sec">Solver</a>
+    <a href="#po-sec">PO planner</a>
+    <a href="#fba-sec">FBA fees</a>
+    <a href="#compare-sec">Compare</a>
+  </div>
+</nav>
+
+<div class="wrap" id="calc-sec">
   <section class="card">
     <h2>Your numbers</h2>
     <div class="row"><label>Marketplace<span class="hint">sets currency + referral presets</span></label><div class="ig" style="width:170px"><span class="pre"></span><select id="market"></select></div></div>
@@ -218,7 +235,7 @@
   </section>
 </div>
 
-<div class="fullwrap">
+<div class="fullwrap" id="chart-sec">
   <section class="card">
     <h2>Profit vs. price</h2>
     <svg id="chart" viewBox="0 0 640 240" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Net profit per unit as the sale price varies"></svg>
@@ -226,7 +243,7 @@
   </section>
 </div>
 
-<div class="fullwrap">
+<div class="fullwrap" id="sens-sec">
   <section class="card">
     <h2>Sensitivity — net profit / unit</h2>
     <div id="sensHost" style="overflow-x:auto"></div>
@@ -234,7 +251,7 @@
   </section>
 </div>
 
-<div class="fullwrap">
+<div class="fullwrap" id="solver-sec">
   <section class="card">
     <h2>Target-price solver</h2>
     <div class="solver">
@@ -266,7 +283,7 @@
   </section>
 </div>
 
-<div class="fullwrap">
+<div class="fullwrap" id="po-sec">
   <section class="card">
     <h2>Purchase order planner</h2>
     <div class="solver">
@@ -287,7 +304,7 @@
   </section>
 </div>
 
-<div class="fullwrap">
+<div class="fullwrap" id="fba-sec">
   <section class="card">
     <h2>FBA fee estimator <span class="badge">US · standard-size</span></h2>
     <div class="solver">
@@ -327,7 +344,7 @@
   </section>
 </div>
 
-<div class="fullwrap">
+<div class="fullwrap" id="compare-sec">
   <section class="card">
     <div class="tbltools">
       <h2 style="margin:0">Saved products <span id="count" class="badge">0</span></h2>
