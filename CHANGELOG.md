@@ -2,6 +2,12 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 1.7.0
+- Return-rate impact — expected net after returns (each return forgoes the sale plus a lost unit + sunk FBA fee).
+
+## 1.6.0
+- Multipack helper — pack size × per-single cost → pack product cost, with net profit per single unit.
+
 ## 1.5.0
 - Competitor price check — match a rival's price and see your net, margin, and a profitable/below-breakeven verdict.
 
