@@ -222,6 +222,14 @@
         <button id="applyFee" class="btn primary">Use this fee ↑</button>
       </div>
       <div id="feeNote" class="empty"></div>
+      <div class="solveout" style="border-top:1px solid var(--line);padding-top:14px">
+        <div><div class="k">Unit volume</div><div id="stVol" style="font-size:20px;font-weight:600;margin-top:2px">—</div></div>
+        <div class="solvestats">
+          <div class="stat"><div id="stStd" class="v">—</div><div class="k">Storage/mo (Jan–Sep)</div></div>
+          <div class="stat"><div id="stPeak" class="v">—</div><div class="k">Storage/mo (Oct–Dec)</div></div>
+        </div>
+        <button id="addStorage" class="btn ghost" title="Add standard monthly storage to Other cost / unit">+ Add to Other cost ↑</button>
+      </div>
     </div>
   </section>
 </div>
@@ -430,7 +438,9 @@ function estimateFBA(l,w,h,lb){
     note:"Outside standard-size tiers — oversize fees vary widely. Enter the fee manually from your Seller Central fee preview."};
 }
 
-let estFee=null;
+// US monthly storage rates per cubic foot (indicative 2024): [Jan-Sep, Oct-Dec].
+const STORAGE={ standard:[0.78,2.40], oversize:[0.56,1.40] };
+let estFee=null, estStorage=null;
 function runFBA(){
   const l=num("dl"),w=num("dw"),h=num("dh");
   const lb = $("wunit").value==="oz" ? num("dwt")/16 : num("dwt");
@@ -440,10 +450,26 @@ function runFBA(){
   $("feeVal").textContent = estFee!=null ? money(estFee) : "—";
   $("feeNote").textContent = note;
   $("applyFee").disabled = estFee==null;
+
+  // Monthly storage from unit volume (ft³ = L×W×H / 1728).
+  const vol = (l>0&&w>0&&h>0) ? (l*w*h)/1728 : 0;
+  const rates = tier.indexOf("standard")>=0 ? STORAGE.standard : STORAGE.oversize;
+  if(vol>0){
+    estStorage = vol*rates[0];
+    $("stVol").textContent = vol.toFixed(3)+" ft³";
+    $("stStd").textContent = money(vol*rates[0]);
+    $("stPeak").textContent = money(vol*rates[1]);
+    $("addStorage").disabled=false;
+  } else {
+    estStorage=null;
+    $("stVol").textContent="—"; $("stStd").textContent="—"; $("stPeak").textContent="—";
+    $("addStorage").disabled=true;
+  }
 }
 ["dl","dw","dh","dwt"].forEach(id=>$(id).addEventListener("input",runFBA));
 $("wunit").addEventListener("change",runFBA);
 $("applyFee").onclick=()=>{ if(estFee!=null){ $("fba").value=estFee.toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
+$("addStorage").onclick=()=>{ if(estStorage!=null){ $("other").value=(num("other")+estStorage).toFixed(2); calc(); window.scrollTo({top:0,behavior:"smooth"}); } };
 runFBA();
 
 /* ---- Saved products (localStorage) ---- */

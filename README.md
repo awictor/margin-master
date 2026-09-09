@@ -23,6 +23,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **PDF sourcing sheet** — one-click clean, printable one-pager with a sourcing verdict (print → Save as PDF)
 - ✅ **Dark mode** — toggle that persists and respects your system preference (no flash on load)
 - ✅ **Multi-marketplace** — US / CA / UK / EU fee sets with the right currency symbol and per-region category referral presets (remembers your choice)
+- ✅ **Storage-fee estimator** — unit volume (ft³) from your dimensions × standard and Oct–Dec peak rates, one-click add to costs
 - ✅ Zero dependencies — one `index.html`, opens anywhere, private by design
 
 ## Run
