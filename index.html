@@ -350,6 +350,7 @@
       <h2 style="margin:0">Saved products <span id="count" class="badge">0</span></h2>
       <div class="toolbtns">
         <button id="importBtn" class="btn ghost">Import CSV</button>
+        <button id="templateBtn" class="btn ghost" title="Download a sample CSV showing the columns Import accepts">CSV template</button>
         <button id="exportBtn" class="btn ghost">Export CSV</button>
         <button id="shareListBtn" class="btn ghost" title="Copy a link that reopens this whole compare list">🔗 Share list</button>
         <button id="clearBtn" class="btn ghost">Clear all</button>
@@ -1084,6 +1085,18 @@ $("saveBtn").onclick=saveProduct;
 $("pname").addEventListener("keydown",e=>{ if(e.key==="Enter") saveProduct(); });
 $("clearBtn").onclick=()=>{ if(confirm("Delete all saved products?")){ store([]); render(); } };
 $("exportBtn").onclick=exportCSV;
+function downloadTemplate(){
+  // Columns Import understands. Row 2 omits FBA + gives dimensions -> fee auto-estimated on import.
+  const lines=[
+    "Product,Price,Cost,Referral%,FBA,Inbound,Other,Units,Length,Width,Height,Weight",
+    '"Bamboo Cutting Board",24.99,6.50,15,4.75,0.60,0.50,300,,,,',
+    '"Silicone Spatula Set",14.99,3.20,15,,0.40,0.30,150,9,6,2,0.8',
+  ];
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="marginmaster-import-template.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+$("templateBtn").onclick=downloadTemplate;
 $("importBtn").onclick=()=>$("csvfile").click();
 $("csvfile").onchange=e=>{ const f=e.target.files[0]; if(!f) return;
   const rd=new FileReader(); rd.onload=()=>{ importCSV(rd.result); e.target.value=""; }; rd.readAsText(f); };

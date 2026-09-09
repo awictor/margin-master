@@ -43,6 +43,10 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 
 Open `index.html` in any browser. That's it. Or host it free on GitHub Pages / Netlify / Cloudflare Pages.
 
+## Importing products
+
+Click **CSV template** to download a sample file with the exact columns Import accepts: `Product, Price, Cost, Referral%, FBA, Inbound, Other, Units, Length, Width, Height, Weight`. Leave `FBA` blank and fill the dimensions and the fee is estimated for you.
+
 ## Test
 
 The pure logic (profit model, FBA/storage fees, CSV parsing, share-link codec) is covered by a headless regression suite that runs the app's real code:
