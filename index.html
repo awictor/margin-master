@@ -141,7 +141,7 @@
 <body>
 <header>
   <button id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
-  <h1><span class="m">Margin</span>Master <span class="badge">FBA</span></h1>
+  <h1 id="brand"><span class="m">Margin</span>Master <span class="badge">FBA</span></h1>
   <p>Know a product's <b>true profit before you source it</b> — net margin, ROI, breakeven ACOS, FBA &amp; storage fees across US/UK/EU/CA. Runs 100% in your browser; nothing leaves your device.</p>
 </header>
 
@@ -846,6 +846,25 @@ $("themeBtn").onclick=()=>{
 };
 syncThemeIcon();
 try{ $("yr").textContent=new Date().getFullYear(); }catch(e){}
+
+/* ---- White-label mode: ?brand=Name&color=%23FF6100 ---- */
+function darken(hex,amt){
+  let h=hex.replace("#",""); if(h.length===3) h=h.split("").map(c=>c+c).join("");
+  const n=parseInt(h,16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.round(r*(1-amt)); g=Math.round(g*(1-amt)); b=Math.round(b*(1-amt));
+  return "#"+[r,g,b].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+function applyWhiteLabel(){
+  let q; try{ q=new URLSearchParams(location.search); }catch(e){ return; }
+  const brand=(q.get("brand")||"").trim().slice(0,40);
+  let color=(q.get("color")||"").trim(); if(color && color[0]!=="#") color="#"+color;
+  if(brand){ $("brand").innerHTML=`<span class="m">${esc(brand)}</span> <span class="badge">FBA</span>`; document.title=brand+" — FBA Profit Calculator"; }
+  if(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(color)){
+    const de=document.documentElement;
+    if(de.style && de.style.setProperty){ de.style.setProperty("--accent",color); de.style.setProperty("--accent-d",darken(color,0.12)); }
+  }
+}
+applyWhiteLabel();
 
 /* ---- First-visit onboarding tip ---- */
 try{ if(!localStorage.getItem("marginmaster.onboarded")) $("tip").style.display="flex"; }catch(e){}

@@ -52,7 +52,7 @@ CI runs it on every push via GitHub Actions.
 
 - A **$9 one-time** or **$5/mo** micro-tool for the seller community
 - A free lead-magnet on a seller-services site (gate the CSV/bulk features)
-- White-label calculator embedded in an agency's client portal
+- White-label calculator embedded in an agency's client portal — pass `?brand=YourAgency&color=%230a7cff` to rebrand the title and accent instantly
 
 ## Roadmap
 
