@@ -54,7 +54,7 @@ const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
-  returnsAdjustedNet,
+  returnsAdjustedNet, summaryText,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -195,6 +195,14 @@ check('returnsAdjustedNet: return rate erodes expected net', () => {
   // 0.9*12.14 - 0.1*(7.5+4.75) = 10.926 - 1.225 = 9.701
   assert.ok(Math.abs(t.returnsAdjustedNet(12.14, 7.5, 4.75, 10) - 9.701) < 0.001);
   assert.equal(t.returnsAdjustedNet(12.14, 7.5, 4.75, 0), 12.14); // 0% = unchanged
+});
+
+check('summaryText: three lines with key metrics', () => {
+  const txt = t.summaryText(base);
+  assert.equal(txt.split('\n').length, 3);
+  assert.match(txt, /Net\/unit \$12\.14/);
+  assert.match(txt, /Margin 40\.5%/);
+  assert.match(txt, /Monthly \(300 u\)/);
 });
 
 console.log(`\n${n} checks passed.`);

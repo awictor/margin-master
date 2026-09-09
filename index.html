@@ -238,6 +238,7 @@
     <div id="insights" class="insights"></div>
     <div class="saverow">
       <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
+      <button id="copyBtn" class="btn ghost" title="Copy a plain-text results summary">📋 Copy</button>
       <button id="printBtn" class="btn ghost" title="Print or save a one-page sourcing sheet as PDF">🖨 PDF</button>
       <button id="shareBtn" class="btn ghost" title="Copy a link that reopens these exact numbers">🔗 Share</button>
       <button id="saveBtn" class="btn primary">Save</button>
@@ -545,6 +546,16 @@ function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 // Expected net per shipped unit given a return rate: a fraction r are returned, forgoing the
 // sale (net) and incurring a per-return loss ≈ product cost + FBA fee (unit sunk, fee unrecovered).
 function returnsAdjustedNet(net,cost,fba,ratePct){ const r=Math.max(0,ratePct)/100; return (1-r)*net - r*(cost+fba); }
+
+// Plain-text results summary for pasting into chat/notes (uses active currency via money()).
+function summaryText(s){
+  const r=compute(s);
+  return [
+    `Price ${money(s.price)} · Net/unit ${money(r.net)} · Margin ${r.margin.toFixed(1)}% · ROI ${r.roi.toFixed(0)}%`,
+    `Breakeven ${money(r.be)} · Breakeven ACOS ${r.acosBE.toFixed(1)}% · Discount room ${r.discountRoom.toFixed(0)}%`,
+    `Monthly (${(s.units||0).toLocaleString()} u) profit ${money0(r.mprofit)} · revenue ${money0(r.mrev)}`,
+  ].join("\n");
+}
 
 // Your economics if you matched a competitor's price.
 function matchCheck(s,compPrice){
@@ -1227,6 +1238,16 @@ function fillPrintChart(){
     '<svg viewBox="0 0 640 240" style="--accent:#FF6100;--ink:#232F3E;--muted:#6b7280;--bad:#d93025;--line:#e7e2d9">'+inner+'</svg>';
 }
 $("printBtn").onclick=()=>{ calc(); fillPrint(); fillPrintChart(); window.print(); };
+
+function copySummary(){
+  const s=readState(), name=($("pname").value||"").trim()||"Product";
+  const mkt=(MARKETS[marketSel.value]||MARKETS.US).label;
+  const txt=`MarginMaster — ${name}\n${mkt}\n`+summaryText(s)+`\nhttps://awictor.github.io/margin-master/`;
+  const b=$("copyBtn"), done=()=>{ b.textContent="✓ Copied"; setTimeout(()=>b.textContent="📋 Copy",1600); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,()=>prompt("Copy this summary:",txt));
+  else prompt("Copy this summary:",txt);
+}
+$("copyBtn").onclick=copySummary;
 
 /* ---- Shareable compare-list bundle (#b=...) ---- */
 function encodeBundleArr(arr){
