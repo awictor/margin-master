@@ -38,6 +38,7 @@
   .nav .navin{max-width:960px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:8px 16px}
   .nav a{white-space:nowrap;font-size:12.5px;color:var(--muted);text-decoration:none;padding:5px 11px;border-radius:20px;border:1px solid transparent}
   .nav a:hover{color:var(--accent-d);border-color:var(--line);background:var(--card)}
+  .nav a.active{color:var(--accent-d);background:rgba(255,97,0,.12);border-color:rgba(255,97,0,.35);font-weight:600}
   .wrap,.fullwrap{scroll-margin-top:58px}
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -1118,6 +1119,18 @@ if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded be
 const _nb=loadBundleFromHash();
 if(_nb) showShareMsg("Imported "+_nb+" shared product"+(_nb===1?"":"s")+" into your compare list below.",true);
 calc(); render();
+
+// Highlight the nav link for whichever section is centered in the viewport
+(function(){
+  const navLinks=[...document.querySelectorAll(".nav a")];
+  if(!navLinks.length || !("IntersectionObserver" in window)) return;
+  const secs=navLinks.map(a=>document.getElementById(a.getAttribute("href").slice(1))).filter(Boolean);
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ const id="#"+e.target.id;
+      navLinks.forEach(a=>a.classList.toggle("active", a.getAttribute("href")===id)); } });
+  },{rootMargin:"-45% 0px -45% 0px",threshold:0});
+  secs.forEach(s=>io.observe(s));
+})();
 </script>
 </body>
 </html>
