@@ -3,8 +3,22 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MarginMaster — Amazon FBA Profit Calculator</title>
-<meta name="description" content="Instantly calculate your true Amazon FBA net profit, margin, ROI, and breakeven. Works offline. No signup." />
+<title>MarginMaster — Amazon FBA Profit & Margin Calculator</title>
+<meta name="description" content="Instantly calculate your true Amazon FBA net profit, margin, ROI, breakeven, and breakeven ACOS across US/UK/EU/CA. Solve target prices, estimate FBA and storage fees, compare products, export PDF. Works 100% offline, no signup." />
+<link rel="canonical" href="https://awictor.github.io/margin-master/" />
+<meta name="theme-color" content="#FF6100" />
+<meta name="color-scheme" content="light dark" />
+<!-- Open Graph / social -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="MarginMaster" />
+<meta property="og:title" content="MarginMaster — Amazon FBA Profit & Margin Calculator" />
+<meta property="og:description" content="Your true Amazon FBA net profit, margin, ROI, breakeven ACOS, FBA + storage fees — in one offline screen. No signup." />
+<meta property="og:url" content="https://awictor.github.io/margin-master/" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="MarginMaster — Amazon FBA Profit Calculator" />
+<meta name="twitter:description" content="True FBA net profit, margin, ROI, breakeven ACOS, FBA + storage fees. Offline, private, no signup." />
+<!-- Inline SVG favicon (orange tile + rising bars) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FF6100'/%3E%3Crect x='16' y='34' width='8' height='14' rx='2' fill='%23fff'/%3E%3Crect x='28' y='26' width='8' height='22' rx='2' fill='%23fff'/%3E%3Crect x='40' y='16' width='8' height='32' rx='2' fill='%23fff'/%3E%3C/svg%3E" />
 <style>
   :root{
     --bg:#F5F3EF; --ink:#232F3E; --accent:#FF6100; --accent-d:#e05600;
@@ -117,7 +131,7 @@
 <header>
   <button id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
   <h1><span class="m">Margin</span>Master <span class="badge">FBA</span></h1>
-  <p>Your true Amazon net profit in real time. Runs 100% in your browser — nothing leaves your device.</p>
+  <p>Know a product's <b>true profit before you source it</b> — net margin, ROI, breakeven ACOS, FBA &amp; storage fees across US/UK/EU/CA. Runs 100% in your browser; nothing leaves your device.</p>
 </header>
 
 <div class="wrap">
@@ -272,8 +286,9 @@
 </section>
 
 <footer>
-  MarginMaster · offline-first FBA calculator · <a href="https://github.com/awictor/margin-master">source</a><br>
-  Fees are estimates — verify against your Seller Central fee preview before sourcing.
+  <b>MarginMaster</b> · offline-first Amazon FBA profit calculator · <a href="https://github.com/awictor/margin-master">source on GitHub</a><br>
+  Fees are indicative estimates — verify against your Seller Central fee preview before sourcing.<br>
+  © <span id="yr">2026</span> Alex Wictor · MIT licensed
 </footer>
 
 <script>
@@ -654,6 +669,7 @@ $("themeBtn").onclick=()=>{
   syncThemeIcon();
 };
 syncThemeIcon();
+try{ $("yr").textContent=new Date().getFullYear(); }catch(e){}
 
 /* ---- Print / PDF sourcing sheet ---- */
 function fillPrint(){
