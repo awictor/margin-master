@@ -164,6 +164,7 @@
     <div class="row"><label>Other cost / unit<span class="hint">prep, storage, returns reserve</span></label><div class="ig"><span class="pre cur">$</span><input id="other" type="number" step="0.01" value="0.50"></div></div>
     <div class="row"><label>Units / month</label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="1" value="300"></div></div>
     <div class="row"><label>Fixed monthly costs<span class="hint">software, VA, tools — optional</span></label><div class="ig"><span class="pre cur">$</span><input id="fixed" type="number" step="1" value="0"></div></div>
+    <div class="row"><label>Days to sell inventory<span class="hint">cash cycle — enables velocity metrics</span></label><div class="ig"><span class="pre">#</span><input id="cycle" type="number" step="1" value="0"></div></div>
   </section>
 
   <section class="card result">
@@ -193,6 +194,11 @@
     <div class="grid3" id="fixedRow" style="grid-template-columns:1fr 1fr;display:none">
       <div class="stat"><div id="beUnits" class="v">—</div><div class="k">Break-even units/mo</div></div>
       <div class="stat"><div id="profitAfter" class="v">$0</div><div class="k">Profit after fixed</div></div>
+    </div>
+    <div class="grid3" id="velRow" style="display:none">
+      <div class="stat"><div id="turns" class="v">—</div><div class="k">Turns / year</div></div>
+      <div class="stat"><div id="annRoi" class="v">—</div><div class="k">Annualized ROI</div></div>
+      <div class="stat"><div id="profitDay" class="v">—</div><div class="k">Profit / day</div></div>
     </div>
     <div class="saverow">
       <input id="pname" type="text" placeholder="Product name (e.g. Bamboo Cutting Board)" maxlength="60">
@@ -410,6 +416,9 @@ buildCats();
 
 function num(id){ const v=parseFloat($(id).value); return isNaN(v)?0:v; }
 
+// Annualized cash-on-cash ROI: per-unit ROI earned once per inventory turn (365/days turns per year).
+function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
+
 const FIELDS=["price","cost","refpct","fba","inbound","other","units"];
 function readState(){ const s={}; FIELDS.forEach(f=>s[f]=num(f)); return s; }
 
@@ -468,6 +477,18 @@ function calc(){
     const after=r.mprofit-fixed;
     const pa=$("profitAfter"); pa.textContent=money0(after); pa.className="v "+(after>=0?"pos":"neg");
   } else { $("fixedRow").style.display="none"; }
+
+  // Inventory velocity: turns/year, annualized cash-on-cash ROI, profit/day
+  const cycle=num("cycle");
+  try{localStorage.setItem("marginmaster.cycle",cycle);}catch(e){}
+  if(cycle>0){
+    $("velRow").style.display="grid";
+    $("turns").textContent=(365/cycle).toFixed(1);
+    const aroi=annualizeRoi(r.roi,cycle);
+    const ar=$("annRoi"); ar.textContent=aroi.toFixed(0)+"%"; ar.className="v "+(aroi>=0?"pos":"neg");
+    const perDay=r.mprofit/30.44;
+    const pd=$("profitDay"); pd.textContent=money(perDay); pd.className="v "+(perDay>=0?"pos":"neg");
+  } else { $("velRow").style.display="none"; }
   solve();
   drawChart();
   drawSensitivity();
@@ -533,7 +554,7 @@ function drawChart(){
   svg.innerHTML=g.join("");
   $("chartNote").textContent="Net profit / unit as sale price sweeps "+money0(lo)+"–"+money0(hi)+". Red line = breakeven, dot = your current price.";
 }
-document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units,#fixed").forEach(el=>el.addEventListener("input",calc));
+document.querySelectorAll("#price,#cost,#refpct,#fba,#inbound,#other,#units,#fixed,#cycle").forEach(el=>el.addEventListener("input",calc));
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -934,6 +955,7 @@ document.querySelectorAll(".row").forEach(row=>{
   }
 });
 try{const fx=localStorage.getItem("marginmaster.fixed"); if(fx!=null) $("fixed").value=fx;}catch(e){}
+try{const cy=localStorage.getItem("marginmaster.cycle"); if(cy!=null) $("cycle").value=cy;}catch(e){}
 if(loadFromHash()) showShareMsg("Opened from a shared link — numbers loaded below.",true);
 calc(); render();
 </script>

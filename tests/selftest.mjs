@@ -51,7 +51,7 @@ const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1
 const js = scripts.sort((a, b) => b.length - a.length)[0];
 const wrapped = js + `
 ;globalThis.__t = {
-  compute, estimateFBA, parseCSV, decodeState, darken,
+  compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -112,6 +112,12 @@ check('darken: valid hex, expands shorthand, clamps channels', () => {
   assert.equal(t.darken('#ffffff', 0.5), '#808080');
   assert.equal(t.darken('#f00', 0), '#ff0000'); // shorthand expands, 0% = unchanged
   assert.equal(t.darken('#000000', 0.3), '#000000');
+});
+
+check('annualizeRoi: per-unit ROI × turns/year', () => {
+  assert.equal(t.annualizeRoi(10, 365), 10);   // one turn/year
+  assert.ok(Math.abs(t.annualizeRoi(10, 30) - 121.67) < 0.1); // ~12 turns
+  assert.equal(t.annualizeRoi(10, 0), 0);       // guard
 });
 
 console.log(`\n${n} checks passed.`);
