@@ -2,6 +2,12 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 2.6.0
+- Working-capital planner — cash locked in inventory + pending Amazon payouts (daily sales × landed cost × (days-to-sell + payout delay)).
+
+## 2.5.0
+- Deal / promo simulator — model a % off + flat deal fee over expected units to decide if a Lightning Deal is worth running.
+
 ## 2.4.0
 - 12-month projection — apply a monthly growth rate for year-1 cumulative profit, month-12 run-rate, and total units.
 
