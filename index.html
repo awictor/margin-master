@@ -430,6 +430,26 @@
 
 <div class="fullwrap">
   <section class="card">
+    <h2>Working capital</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>With Amazon paying out every</span>
+        <div class="ig" style="width:80px"><span class="pre">#</span><input id="payout" type="number" step="1" value="14"></div>
+        <span>days, plus your days-to-sell above:</span>
+      </div>
+      <div class="solveout">
+        <div class="solvestats">
+          <div class="stat"><div id="wcDaily" class="v">—</div><div class="k">Daily sales</div></div>
+          <div class="stat"><div id="wcCapital" class="v">—</div><div class="k">Cash tied up</div></div>
+        </div>
+      </div>
+      <div id="wcNote" class="empty"></div>
+    </div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
     <h2>Restock planner</h2>
     <div class="solver">
       <div class="sline">
@@ -672,6 +692,11 @@ function compareFulfillment(s,fbmShip){
   return {fba,fbm,delta:fbm-fba,winner: fbm>fba?"FBM":(fba>fbm?"FBA":"tie")};
 }
 
+// Working capital tied up: daily sales × landed cost × (days-to-sell + Amazon payout delay).
+function workingCapital(unitsPerMonth,investPerUnit,cycleDays,payoutDays){
+  return (unitsPerMonth/30.44)*investPerUnit*(Math.max(0,cycleDays)+Math.max(0,payoutDays));
+}
+
 // Reorder point in units: cover lead time + safety stock at the current daily sales rate.
 function reorderPoint(unitsPerMonth,leadDays,safetyDays){ return Math.ceil((unitsPerMonth/30.44)*(Math.max(0,leadDays)+Math.max(0,safetyDays))); }
 
@@ -816,6 +841,7 @@ function calc(){
   renderFulfillment(s);
   renderProjection(s);
   renderDeal(s);
+  renderWorkcap(s);
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");
@@ -1013,6 +1039,19 @@ function renderDeal(s){
   else { st.textContent="✕ Flat fee outweighs the profit at these units."; st.style.color="var(--bad)"; }
 }
 ["dlDisc","dlFee","dlUnits"].forEach(id=>$(id).addEventListener("input",()=>renderDeal()));
+
+// Working capital
+function renderWorkcap(s){
+  s=s||readState(); const payout=num("payout"), cycle=num("cycle"), invest=compute(s).invest;
+  try{localStorage.setItem("marginmaster.payout",payout);}catch(e){}
+  $("wcDaily").textContent = s.units>0 ? (s.units/30.44).toFixed(1) : "—";
+  const cap=workingCapital(s.units,invest,cycle,payout);
+  $("wcCapital").textContent = (s.units>0&&(cycle+payout)>0) ? money0(cap) : "—";
+  $("wcNote").textContent = cycle>0
+    ? `Roughly ${money0(cap)} of cash stays locked in inventory + pending payouts at any time.`
+    : "Set “Days to sell inventory” above to include inventory holding time.";
+}
+$("payout").addEventListener("input",()=>renderWorkcap());
 
 // 12-month projection
 function renderProjection(s){
@@ -1589,6 +1628,7 @@ try{const gw=localStorage.getItem("marginmaster.growth"); if(gw!=null) $("growth
 try{const dd=localStorage.getItem("marginmaster.dldisc"); if(dd!=null) $("dlDisc").value=dd;}catch(e){}
 try{const df=localStorage.getItem("marginmaster.dlfee"); if(df!=null) $("dlFee").value=df;}catch(e){}
 try{const du=localStorage.getItem("marginmaster.dlunits"); if(du!=null) $("dlUnits").value=du;}catch(e){}
+try{const po=localStorage.getItem("marginmaster.payout"); if(po!=null) $("payout").value=po;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 try{const bg=localStorage.getItem("marginmaster.budget"); if(bg!=null) $("poBudget").value=bg;}catch(e){}

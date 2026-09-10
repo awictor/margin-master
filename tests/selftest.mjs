@@ -55,7 +55,7 @@ const wrapped = js + `
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
   returnsAdjustedNet, summaryText, scoreProduct, reorderPoint, budgetPlan, compareFulfillment,
-  projectAnnual, dealPlan,
+  projectAnnual, dealPlan, workingCapital,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -257,6 +257,12 @@ check('dealPlan: discounted net, flat fee, go/no-go', () => {
   assert.equal(d.worth, d.totalProfit > 0);
   // huge fee, few units -> not worth
   assert.equal(t.dealPlan(base, 20, 5000, 10).worth, false);
+});
+
+check('workingCapital: daily × invest × (cycle + payout)', () => {
+  // 300/mo -> 9.855/day; invest 8.6; (30+14)=44 -> ~3729
+  assert.ok(Math.abs(t.workingCapital(300, 8.6, 30, 14) - 3729.4) < 1);
+  assert.equal(t.workingCapital(0, 8.6, 30, 14), 0);
 });
 
 console.log(`\n${n} checks passed.`);

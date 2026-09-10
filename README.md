@@ -40,6 +40,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Accurate referral fees** — per-item minimum floor ($0.30 US / £0.25 UK etc.) and tiered US apparel presets (5% ≤$15, 10%, 17%)
 - ✅ **Fixed-cost break-even** — enter monthly fixed costs (tools, VA, subscriptions) to see units/month needed to cover them and profit after fixed
 - ✅ **Inventory velocity** — enter days-to-sell to get turns/year, annualized cash-on-cash ROI, and profit/day, so a fast thin-margin product beats a slow fat one on the numbers
+- ✅ **Working capital** — estimate the cash locked in inventory + pending Amazon payouts at any time
 - ✅ **Restock planner** — lead time + safety stock + velocity → reorder point, days of cover, and a reorder-now signal
 - ✅ **Purchase-order planner** — enter an order quantity to see total cash outlay, profit if sold through, return on the order, and sell-through time at your velocity
 - ✅ **Profit-goal planner** — set a target monthly profit and see the units/month and sales/month you'd need to hit it
