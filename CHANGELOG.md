@@ -2,6 +2,12 @@
 
 All notable changes to MarginMaster. Dates are release order; the project ships as a single `index.html` with a headless self-test suite (`tests/selftest.mjs`) run in CI.
 
+## 2.4.0
+- 12-month projection — apply a monthly growth rate for year-1 cumulative profit, month-12 run-rate, and total units.
+
+## 2.3.0
+- FBA vs FBM comparison — enter a self-fulfilled ship cost to see which fulfillment nets more.
+
 ## 2.2.0
 - Budget order sizing — enter available capital to see units affordable and profit if the order sells through.
 
