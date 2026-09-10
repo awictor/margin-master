@@ -55,7 +55,7 @@ const wrapped = js + `
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
   returnsAdjustedNet, summaryText, scoreProduct, reorderPoint, budgetPlan, compareFulfillment,
-  projectAnnual,
+  projectAnnual, dealPlan,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -246,6 +246,17 @@ check('projectAnnual: flat and compounding growth', () => {
   const grow = t.projectAnnual(10, 100, 10);
   assert.ok(grow.months[11] > grow.months[0]); // last month bigger than first
   assert.ok(Math.abs(grow.months[11] - 10 * 100 * Math.pow(1.1, 11)) < 0.01);
+});
+
+check('dealPlan: discounted net, flat fee, go/no-go', () => {
+  // 20% off 29.99 = 23.99; net there, ×100 − $150 fee
+  const d = t.dealPlan(base, 20, 150, 100);
+  assert.ok(Math.abs(d.discountedPrice - 23.99) < 0.01);
+  assert.ok(d.perNet > 0);
+  assert.ok(Math.abs(d.totalProfit - (d.perNet * 100 - 150)) < 0.01);
+  assert.equal(d.worth, d.totalProfit > 0);
+  // huge fee, few units -> not worth
+  assert.equal(t.dealPlan(base, 20, 5000, 10).worth, false);
 });
 
 console.log(`\n${n} checks passed.`);

@@ -385,6 +385,31 @@
 
 <div class="fullwrap">
   <section class="card">
+    <h2>Deal / promo simulator</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>A</span>
+        <div class="ig" style="width:80px"><span class="pre">%</span><input id="dlDisc" type="number" step="1" value="20"></div>
+        <span>off deal with a</span>
+        <div class="ig" style="width:100px"><span class="pre cur">$</span><input id="dlFee" type="number" step="1" value="150"></div>
+        <span>flat fee, expecting</span>
+        <div class="ig" style="width:90px"><span class="pre">#</span><input id="dlUnits" type="number" step="1" value="100"></div>
+        <span>units:</span>
+      </div>
+      <div class="solveout">
+        <div class="solvestats">
+          <div class="stat"><div id="dlPrice" class="v">—</div><div class="k">Deal price</div></div>
+          <div class="stat"><div id="dlNet" class="v">—</div><div class="k">Net / unit at deal</div></div>
+          <div class="stat"><div id="dlTotal" class="v">—</div><div class="k">Total deal profit</div></div>
+        </div>
+        <div id="dlStatus" style="font-weight:700"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
     <h2>FBA vs FBM (self-fulfilled)</h2>
     <div class="solver">
       <div class="sline">
@@ -632,6 +657,14 @@ function projectAnnual(net,unitsMonth,growthPct){
   return {totalProfit, totalUnits, months};
 }
 
+// Deal/promo economics: discounted price net per unit, minus a flat deal fee spread over expected units.
+function dealPlan(s,discountPct,dealFee,dealUnits){
+  const dp=s.price*(1-discountPct/100);
+  const perNet=compute({...s,price:dp}).net;
+  const totalProfit=perNet*dealUnits - dealFee;
+  return {discountedPrice:dp, perNet, totalProfit, worth: totalProfit>0};
+}
+
 // FBA vs FBM (self-fulfilled): FBM drops the FBA fee + inbound and pays its own ship cost.
 function compareFulfillment(s,fbmShip){
   const fba=compute(s).net;
@@ -782,6 +815,7 @@ function calc(){
   renderRestock(s);
   renderFulfillment(s);
   renderProjection(s);
+  renderDeal(s);
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");
@@ -964,6 +998,21 @@ function renderFulfillment(s){
   else { st.textContent=`${c.winner} wins by ${money(Math.abs(c.delta))}/unit.`; st.style.color=c.winner==="FBM"?"var(--good)":"var(--accent-d)"; }
 }
 $("fbmShip").addEventListener("input",()=>renderFulfillment());
+
+// Deal / promo simulator
+function renderDeal(s){
+  s=s||readState(); const disc=num("dlDisc"), fee=num("dlFee"), units=num("dlUnits");
+  try{localStorage.setItem("marginmaster.dldisc",disc);localStorage.setItem("marginmaster.dlfee",fee);localStorage.setItem("marginmaster.dlunits",units);}catch(e){}
+  const d=dealPlan(s,disc,fee,units);
+  $("dlPrice").textContent=money(d.discountedPrice);
+  const dn=$("dlNet"); dn.textContent=money(d.perNet); dn.className="v "+(d.perNet>=0?"pos":"neg");
+  const dt=$("dlTotal"); dt.textContent=money0(d.totalProfit); dt.className="v "+(d.totalProfit>=0?"pos":"neg");
+  const st=$("dlStatus");
+  if(d.perNet<0){ st.textContent="✕ You'd lose money on every deal unit — skip it."; st.style.color="var(--bad)"; }
+  else if(d.worth){ st.textContent="✓ Worth running — nets "+money0(d.totalProfit)+" after the fee."; st.style.color="var(--good)"; }
+  else { st.textContent="✕ Flat fee outweighs the profit at these units."; st.style.color="var(--bad)"; }
+}
+["dlDisc","dlFee","dlUnits"].forEach(id=>$(id).addEventListener("input",()=>renderDeal()));
 
 // 12-month projection
 function renderProjection(s){
@@ -1537,6 +1586,9 @@ try{const rsf=localStorage.getItem("marginmaster.rssafety"); if(rsf!=null) $("rs
 try{const rh=localStorage.getItem("marginmaster.rshand"); if(rh!=null) $("rsHand").value=rh;}catch(e){}
 try{const fs=localStorage.getItem("marginmaster.fbmship"); if(fs!=null) $("fbmShip").value=fs;}catch(e){}
 try{const gw=localStorage.getItem("marginmaster.growth"); if(gw!=null) $("growth").value=gw;}catch(e){}
+try{const dd=localStorage.getItem("marginmaster.dldisc"); if(dd!=null) $("dlDisc").value=dd;}catch(e){}
+try{const df=localStorage.getItem("marginmaster.dlfee"); if(df!=null) $("dlFee").value=df;}catch(e){}
+try{const du=localStorage.getItem("marginmaster.dlunits"); if(du!=null) $("dlUnits").value=du;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 try{const bg=localStorage.getItem("marginmaster.budget"); if(bg!=null) $("poBudget").value=bg;}catch(e){}

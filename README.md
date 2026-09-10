@@ -24,6 +24,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Bulk CSV import + ranking** — drop a supplier/research CSV, auto-map columns, rank by any metric with sortable headers; if the file has Length/Width/Height/Weight columns and no FBA fee, it estimates the fee per row automatically
 - ✅ **Target-price solver** — solve the exact sale price to hit a target margin %, ROI %, or net $/unit, then one-click apply it
 - ✅ **Competitor price check** — enter a rival's price to see your net, margin, and whether matching it still profits
+- ✅ **Deal / promo simulator** — model a % off + flat deal fee over expected units to decide if a Lightning Deal is worth running
 - ✅ **Multipack helper** — turn a per-single cost + pack size into the pack product cost and see net profit per single unit
 - ✅ **FBA vs FBM** — enter a self-fulfilled ship cost to compare net/unit and see which fulfillment method wins
 - ✅ **FBA fee estimator** — dimensions + weight → US size tier → estimated fulfillment fee (dimensional-weight aware), one-click apply; plus quick-pick presets for common item classes when you don't know the dimensions
