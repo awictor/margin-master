@@ -55,6 +55,7 @@ const wrapped = js + `
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
   returnsAdjustedNet, summaryText, scoreProduct, reorderPoint, budgetPlan, compareFulfillment,
+  projectAnnual,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -235,6 +236,16 @@ check('compareFulfillment: FBM drops FBA fee + inbound for its own ship cost', (
   assert.equal(c.winner, 'FBM');
   // pricier self-ship flips it
   assert.equal(t.compareFulfillment(base, 8).winner, 'FBA');
+});
+
+check('projectAnnual: flat and compounding growth', () => {
+  const flat = t.projectAnnual(12.14, 300, 0);
+  assert.ok(Math.abs(flat.totalProfit - 12.14 * 300 * 12) < 1);
+  assert.equal(flat.months.length, 12);
+  assert.equal(flat.totalUnits, 3600);
+  const grow = t.projectAnnual(10, 100, 10);
+  assert.ok(grow.months[11] > grow.months[0]); // last month bigger than first
+  assert.ok(Math.abs(grow.months[11] - 10 * 100 * Math.pow(1.1, 11)) < 0.01);
 });
 
 console.log(`\n${n} checks passed.`);

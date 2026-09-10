@@ -428,6 +428,26 @@
   </section>
 </div>
 
+<div class="fullwrap">
+  <section class="card">
+    <h2>12-month projection</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>At</span>
+        <div class="ig" style="width:90px"><span class="pre">%</span><input id="growth" type="number" step="1" value="0"></div>
+        <span>monthly unit growth, starting from this month's units:</span>
+      </div>
+      <div class="solveout">
+        <div class="solvestats">
+          <div class="stat"><div id="projTotal" class="v">—</div><div class="k">Year-1 profit</div></div>
+          <div class="stat"><div id="projRun" class="v">—</div><div class="k">Month-12 profit</div></div>
+          <div class="stat"><div id="projUnits" class="v">—</div><div class="k">Year-1 units</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
 <div class="fullwrap" id="fba-sec">
   <section class="card">
     <h2>FBA fee estimator <span class="badge">US · standard-size</span></h2>
@@ -605,6 +625,13 @@ function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 // sale (net) and incurring a per-return loss ≈ product cost + FBA fee (unit sunk, fee unrecovered).
 function returnsAdjustedNet(net,cost,fba,ratePct){ const r=Math.max(0,ratePct)/100; return (1-r)*net - r*(cost+fba); }
 
+// 12-month projection: net/unit fixed, monthly units compound at growthPct.
+function projectAnnual(net,unitsMonth,growthPct){
+  let u=unitsMonth, totalProfit=0, totalUnits=0; const months=[];
+  for(let i=0;i<12;i++){ const p=net*u; months.push(p); totalProfit+=p; totalUnits+=u; u*=(1+growthPct/100); }
+  return {totalProfit, totalUnits, months};
+}
+
 // FBA vs FBM (self-fulfilled): FBM drops the FBA fee + inbound and pays its own ship cost.
 function compareFulfillment(s,fbmShip){
   const fba=compute(s).net;
@@ -754,6 +781,7 @@ function calc(){
   renderMultipack(s);
   renderRestock(s);
   renderFulfillment(s);
+  renderProjection(s);
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");
@@ -936,6 +964,17 @@ function renderFulfillment(s){
   else { st.textContent=`${c.winner} wins by ${money(Math.abs(c.delta))}/unit.`; st.style.color=c.winner==="FBM"?"var(--good)":"var(--accent-d)"; }
 }
 $("fbmShip").addEventListener("input",()=>renderFulfillment());
+
+// 12-month projection
+function renderProjection(s){
+  s=s||readState(); const g=num("growth");
+  try{localStorage.setItem("marginmaster.growth",g);}catch(e){}
+  const r=compute(s), p=projectAnnual(r.net,s.units,g);
+  const pt=$("projTotal"); pt.textContent=money0(p.totalProfit); pt.className="v "+(p.totalProfit>=0?"pos":"neg");
+  const pr=$("projRun"); pr.textContent=money0(p.months[11]); pr.className="v "+(p.months[11]>=0?"pos":"neg");
+  $("projUnits").textContent=Math.round(p.totalUnits).toLocaleString();
+}
+$("growth").addEventListener("input",()=>renderProjection());
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -1497,6 +1536,7 @@ try{const rl=localStorage.getItem("marginmaster.rslead"); if(rl!=null) $("rsLead
 try{const rsf=localStorage.getItem("marginmaster.rssafety"); if(rsf!=null) $("rsSafety").value=rsf;}catch(e){}
 try{const rh=localStorage.getItem("marginmaster.rshand"); if(rh!=null) $("rsHand").value=rh;}catch(e){}
 try{const fs=localStorage.getItem("marginmaster.fbmship"); if(fs!=null) $("fbmShip").value=fs;}catch(e){}
+try{const gw=localStorage.getItem("marginmaster.growth"); if(gw!=null) $("growth").value=gw;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 try{const bg=localStorage.getItem("marginmaster.budget"); if(bg!=null) $("poBudget").value=bg;}catch(e){}

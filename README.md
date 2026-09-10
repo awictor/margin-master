@@ -43,6 +43,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Purchase-order planner** — enter an order quantity to see total cash outlay, profit if sold through, return on the order, and sell-through time at your velocity
 - ✅ **Profit-goal planner** — set a target monthly profit and see the units/month and sales/month you'd need to hit it
 - ✅ **Budget order sizing** — enter available capital to see how many units you can afford and the profit if that order sells through
+- ✅ **12-month projection** — apply a monthly growth rate to see year-1 cumulative profit, month-12 run-rate, and total units
 - ✅ **Profit-vs-price chart** — inline SVG curve of net profit as the price sweeps, with breakeven and current-price markers (redraws live, themed)
 - ✅ **Sensitivity matrix** — net profit/unit across sale price × product cost each ±10/20%, color-coded, so you see how fragile a margin is to a price drop or cost bump
 - ✅ **VAT-aware (UK/EU)** — treat the sale price as VAT-inclusive; VAT is stripped from revenue before profit, referral still charged on gross, margin shown on real ex-VAT revenue
