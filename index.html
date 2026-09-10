@@ -385,6 +385,26 @@
 
 <div class="fullwrap">
   <section class="card">
+    <h2>FBA vs FBM (self-fulfilled)</h2>
+    <div class="solver">
+      <div class="sline">
+        <span>If you ship it yourself for</span>
+        <div class="ig" style="width:110px"><span class="pre cur">$</span><input id="fbmShip" type="number" step="0.01" value="4.50"></div>
+        <span>per unit (no FBA fee or inbound):</span>
+      </div>
+      <div class="solveout">
+        <div class="solvestats">
+          <div class="stat"><div id="ffFba" class="v">—</div><div class="k">FBA net / unit</div></div>
+          <div class="stat"><div id="ffFbm" class="v">—</div><div class="k">FBM net / unit</div></div>
+        </div>
+        <div id="ffStatus" style="font-weight:700"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="fullwrap">
+  <section class="card">
     <h2>Restock planner</h2>
     <div class="solver">
       <div class="sline">
@@ -585,6 +605,13 @@ function annualizeRoi(roiPct,days){ return days>0 ? roiPct*365/days : 0; }
 // sale (net) and incurring a per-return loss ≈ product cost + FBA fee (unit sunk, fee unrecovered).
 function returnsAdjustedNet(net,cost,fba,ratePct){ const r=Math.max(0,ratePct)/100; return (1-r)*net - r*(cost+fba); }
 
+// FBA vs FBM (self-fulfilled): FBM drops the FBA fee + inbound and pays its own ship cost.
+function compareFulfillment(s,fbmShip){
+  const fba=compute(s).net;
+  const fbm=compute({...s,fba:fbmShip,inbound:0}).net;
+  return {fba,fbm,delta:fbm-fba,winner: fbm>fba?"FBM":(fba>fbm?"FBA":"tie")};
+}
+
 // Reorder point in units: cover lead time + safety stock at the current daily sales rate.
 function reorderPoint(unitsPerMonth,leadDays,safetyDays){ return Math.ceil((unitsPerMonth/30.44)*(Math.max(0,leadDays)+Math.max(0,safetyDays))); }
 
@@ -726,6 +753,7 @@ function calc(){
   renderMatch(s);
   renderMultipack(s);
   renderRestock(s);
+  renderFulfillment(s);
 
   // Fixed monthly costs -> break-even units and profit after fixed
   const fixed=num("fixed");
@@ -895,6 +923,19 @@ function renderRestock(s){
   else { const days=daily>0?Math.round((hand-point)/daily):0; st.textContent=`✓ Stock OK — reorder in ~${Math.max(0,days)} days.`; st.style.color="var(--good)"; }
 }
 ["rsLead","rsSafety","rsHand"].forEach(id=>$(id).addEventListener("input",()=>renderRestock()));
+
+// FBA vs FBM comparison
+function renderFulfillment(s){
+  s=s||readState(); const ship=num("fbmShip");
+  try{localStorage.setItem("marginmaster.fbmship",ship);}catch(e){}
+  const c=compareFulfillment(s,ship);
+  const fa=$("ffFba"); fa.textContent=money(c.fba); fa.className="v "+(c.fba>=0?"pos":"neg");
+  const fb=$("ffFbm"); fb.textContent=money(c.fbm); fb.className="v "+(c.fbm>=0?"pos":"neg");
+  const st=$("ffStatus");
+  if(c.winner==="tie"){ st.textContent="Even — both net the same."; st.style.color="var(--muted)"; }
+  else { st.textContent=`${c.winner} wins by ${money(Math.abs(c.delta))}/unit.`; st.style.color=c.winner==="FBM"?"var(--good)":"var(--accent-d)"; }
+}
+$("fbmShip").addEventListener("input",()=>renderFulfillment());
 
 /* ---- Target-price solver ---- */
 // Solve the sale price required to hit a target margin%, ROI%, or net $/unit,
@@ -1455,6 +1496,7 @@ try{const rt=localStorage.getItem("marginmaster.returns"); if(rt!=null) $("retur
 try{const rl=localStorage.getItem("marginmaster.rslead"); if(rl!=null) $("rsLead").value=rl;}catch(e){}
 try{const rsf=localStorage.getItem("marginmaster.rssafety"); if(rsf!=null) $("rsSafety").value=rsf;}catch(e){}
 try{const rh=localStorage.getItem("marginmaster.rshand"); if(rh!=null) $("rsHand").value=rh;}catch(e){}
+try{const fs=localStorage.getItem("marginmaster.fbmship"); if(fs!=null) $("fbmShip").value=fs;}catch(e){}
 try{const pq=localStorage.getItem("marginmaster.poqty"); if(pq!=null) $("poQty").value=pq;}catch(e){}
 try{const gl=localStorage.getItem("marginmaster.goal"); if(gl!=null) $("goalProfit").value=gl;}catch(e){}
 try{const bg=localStorage.getItem("marginmaster.budget"); if(bg!=null) $("poBudget").value=bg;}catch(e){}

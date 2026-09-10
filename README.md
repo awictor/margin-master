@@ -25,6 +25,7 @@ Most sellers eyeball their margins and get burned by referral fees, FBA fulfillm
 - ✅ **Target-price solver** — solve the exact sale price to hit a target margin %, ROI %, or net $/unit, then one-click apply it
 - ✅ **Competitor price check** — enter a rival's price to see your net, margin, and whether matching it still profits
 - ✅ **Multipack helper** — turn a per-single cost + pack size into the pack product cost and see net profit per single unit
+- ✅ **FBA vs FBM** — enter a self-fulfilled ship cost to compare net/unit and see which fulfillment method wins
 - ✅ **FBA fee estimator** — dimensions + weight → US size tier → estimated fulfillment fee (dimensional-weight aware), one-click apply; plus quick-pick presets for common item classes when you don't know the dimensions
 - ✅ **Shareable links** — copy a link that reopens the exact numbers *and* marketplace, VAT, and fixed-cost context (URL hash, nothing sent to a server; older links stay valid)
 - ✅ **PDF sourcing sheet** — one-click clean, printable one-pager with a sourcing verdict and the profit-vs-price chart (print → Save as PDF)

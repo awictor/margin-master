@@ -54,7 +54,7 @@ const wrapped = js + `
 ;globalThis.__t = {
   compute, estimateFBA, parseCSV, decodeState, darken, annualizeRoi,
   encodeBundleArr, decodeBundleStr, insights, poPlan, heat, goalPlan, portfolioTotals, matchCheck,
-  returnsAdjustedNet, summaryText, scoreProduct, reorderPoint, budgetPlan,
+  returnsAdjustedNet, summaryText, scoreProduct, reorderPoint, budgetPlan, compareFulfillment,
   setVAT: (o, r) => { VAT_ON = o; VAT_RATE = r; },
   setMIN: m => { MIN_REF = m; },
 };`;
@@ -225,6 +225,16 @@ check('budgetPlan: units a budget affords + profit', () => {
   const b = t.budgetPlan(base, 5000);
   assert.equal(b.units, 581);
   assert.ok(Math.abs(b.profit - 581 * 12.14) < 1);
+});
+
+check('compareFulfillment: FBM drops FBA fee + inbound for its own ship cost', () => {
+  // base FBA net 12.14. FBM at $4.50: drops fba 4.75 + inbound 0.60, adds 4.50 -> +0.85 -> 12.99
+  const c = t.compareFulfillment(base, 4.50);
+  assert.ok(Math.abs(c.fba - 12.14) < 0.01);
+  assert.ok(Math.abs(c.fbm - 12.99) < 0.01, 'fbm ' + c.fbm);
+  assert.equal(c.winner, 'FBM');
+  // pricier self-ship flips it
+  assert.equal(t.compareFulfillment(base, 8).winner, 'FBA');
 });
 
 console.log(`\n${n} checks passed.`);
